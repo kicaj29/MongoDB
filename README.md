@@ -9,6 +9,8 @@
     - [Load sample data](#load-sample-data)
     - [Monitor create cluster](#monitor-create-cluster)
     - [View sample data](#view-sample-data)
+- [CRUD operations](#crud-operations)
+  - [Create](#create)
 
 # Basics
 ## MongoDB is document database type.
@@ -101,3 +103,19 @@ In MongoDB Compass:
 ![022_view-sample-data.png](images/022_view-sample-data.png)
 
 ![023_view-sample-data.png](images/023_view-sample-data.png)
+
+# CRUD operations
+
+* Create: `db.collection.insertOne(), db.collection.insertMany()`
+* Read: `db.collection.find()`
+* Update: `db.collection.updateOne()`
+* Delete: `db.collection.deleteOne()`
+
+## Create
+
+* All write operations in MongoDB are atomic on the level of a single document even if it writes also to multiple embedded sub documents. It means that if we use `db.collection.insertMany()` and single document operation is atomic but the whole operation is not atomic. If we need atomicity for multiple documents that we have to use distributed transactions.
+
+* If the collection does not currently exist insert operations will create the collection (table).
+
+* If an inserted document omits the `_id` field, the MongoDB driver automatically generates and `ObjectId` for the `_id` field.
+`_id` field must be unique in the collection otherwise  exception is thrown.

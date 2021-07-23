@@ -3,6 +3,7 @@
   - [CAP model for MongoDB](#cap-model-for-mongodb)
   - [SQL Terms vs Mongo DB Terms](#sql-terms-vs-mongo-db-terms)
   - [JSON vs BSON](#json-vs-bson)
+  - [Replica Set](#replica-set)
   - [Causal consistency](#causal-consistency)
 - [Setting up MongoDB Atlas](#setting-up-mongodb-atlas)
   - [Create a new project and next go to this project](#create-a-new-project-and-next-go-to-this-project)
@@ -46,6 +47,10 @@ Advantages of document database type:
 ## JSON vs BSON
 
 ![003_CAP-mongo.png](images/003_CAP-mongo.png)
+
+## Replica Set
+
+![029_replica_set.png](images/029_replica_set.png)
 
 ## Causal consistency 
 
@@ -393,3 +398,25 @@ Allows to control the consistency and isolation properties of the data read from
   * If the transaction is part of a causally consistent session, upon transaction commit with write concern "majority", the transaction operations are guaranteed to have read from a snapshot of majority-committed data that provides causal consistency with the operation immediately preceding the transaction start.
 
 ### Reading using MongoDB compass
+
+![030_filter_in_compass.png](images/030_filter_in_compass.png)
+
+![031_filter_in_compass.png](images/031_filter_in_compass.png)
+
+Returns all movies where `Billy Bletcher` cast:
+
+![032_filter_in_compass.png](images/032_filter_in_compass.png)
+
+![033_filter_in_compass.png](images/033_filter_in_compass.png)
+
+Another examples:
+
+`{ $and: [{runtime: {$gt: 80}}, {"awards.wins": 3}]}`   
+
+`{ $or: [{runtime: {$gt: 80}}, {"awards.wins": 3}]}`   
+
+Using options:
+
+![034_filter_in_compass.png](images/034_filter_in_compass.png)
+
+

@@ -24,6 +24,7 @@
     - [Query projections](#query-projections)
     - [Read concerns](#read-concerns)
     - [Reading using MongoDB compass](#reading-using-mongodb-compass)
+    - [Reading using command line](#reading-using-command-line)
 
 # Basics
 ## MongoDB is document database type.
@@ -419,4 +420,5 @@ Using options:
 
 ![034_filter_in_compass.png](images/034_filter_in_compass.png)
 
+### Reading using command line
 

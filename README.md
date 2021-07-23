@@ -3,6 +3,7 @@
   - [CAP model for MongoDB](#cap-model-for-mongodb)
   - [SQL Terms vs Mongo DB Terms](#sql-terms-vs-mongo-db-terms)
   - [JSON vs BSON](#json-vs-bson)
+  - [Causal consistency](#causal-consistency)
 - [Setting up MongoDB Atlas](#setting-up-mongodb-atlas)
   - [Create a new project and next go to this project](#create-a-new-project-and-next-go-to-this-project)
   - [Create a free cluster](#create-a-free-cluster)
@@ -17,6 +18,11 @@
       - [insertOne](#insertone)
         - [Reading table](#reading-table)
       - [insertMany](#insertmany)
+  - [Reading data](#reading-data)
+    - [Query and query operators](#query-and-query-operators)
+    - [Query projections](#query-projections)
+    - [Read concerns](#read-concerns)
+    - [Reading using MongoDB compass](#reading-using-mongodb-compass)
 
 # Basics
 ## MongoDB is document database type.
@@ -40,6 +46,14 @@ Advantages of document database type:
 ## JSON vs BSON
 
 ![003_CAP-mongo.png](images/003_CAP-mongo.png)
+
+## Causal consistency 
+
+> "Causal consistency captures the potential causal relationships between operations, and guarantees that all processes observe causally-related operations in a common order. In other words, all processes in the system agree on the order of the causally-related operations. They may disagree on the order of operations that are causally unrelated.   
+> 
+> Let us define the following relation. If some process performs a write operation A, and some (the same or another) process that observed A then performs a write operation B, then it is possible that A is the cause of B; we say that A “potentially causes” or “causally precedes” B. Causal Consistency guarantees that if A causally-precedes B, then every process in the system observes A before observing B. Conversely, two write operations C and D are said concurrent, or causally independent, if neither causally precedes the other. In this case, a process may observe either C before D, or D before C"
+
+> "Causal consistency can solve many problems, which cannot be solved in the eventual consistency, such as ordering operations. The causal consistency ensures that every sees operations in the same causal order, and this makes the causal consistency stronger than the eventual consistency"
 
 # Setting up MongoDB Atlas
 
@@ -338,3 +352,44 @@ db.newusers.insertMany(
 ]
 )
 ```
+
+## Reading data
+
+### Query and query operators
+
+* comparison
+* logical
+* element
+* evaluation
+* geo-spatial
+* array
+* bitwise
+
+More in [docs](https://docs.mongodb.com/manual/reference/operator/query/).
+
+### Query projections
+
+Defines which fields should be returned by the query.
+
+* 1 or true: include the field
+* 0 or false: exclude the field
+
+### Read concerns
+
+More in [docs](https://docs.mongodb.com/manual/reference/read-concern/).
+
+Allows to control the consistency and isolation properties of the data read from replica sets and replica set shards.
+
+* Local: no guarantee that the data has been written to majority of the replica set members. The data that you are reading might be rolled back. It is default mode when we read from the primary replica set.
+
+* Available: the same local but it is default when we read from the secondary replica set. 
+
+* Majority: this is the default for all the fix operators if you do not specify and of the read concerns. In this case the query returns a data that has been acknowledged by the majority of the replica set members. The documents returned by the read operation are durable, even in the event of failure.
+
+* Linearisible: the query returns data that reflects all successful majority-acknowledged writes that completed prior to the start of the read operation. The query may wait for concurrently executing writes to propagate to a majority of replica set members before returning results.
+
+* Snapshot
+  * If the transaction is not part of a causally consistent session, upon transaction commit with write concern "majority", the transaction operations are guaranteed to have read from a snapshot of majority-committed data.
+  * If the transaction is part of a causally consistent session, upon transaction commit with write concern "majority", the transaction operations are guaranteed to have read from a snapshot of majority-committed data that provides causal consistency with the operation immediately preceding the transaction start.
+
+### Reading using MongoDB compass

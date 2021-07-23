@@ -11,6 +11,8 @@
     - [View sample data](#view-sample-data)
 - [CRUD operations](#crud-operations)
   - [Create](#create)
+    - [Create using MongoDB Compass](#create-using-mongodb-compass)
+    - [Create using command line](#create-using-command-line)
 
 # Basics
 ## MongoDB is document database type.
@@ -119,3 +121,63 @@ In MongoDB Compass:
 
 * If an inserted document omits the `_id` field, the MongoDB driver automatically generates and `ObjectId` for the `_id` field.
 `_id` field must be unique in the collection otherwise  exception is thrown.
+
+### Create using MongoDB Compass
+
+First create database - to create database you have to also specify one collection name (in db there can be multiple collections).
+
+![024_create_document.png](images/024_create_document.png)
+
+![025_create_document.png](images/025_create_document.png)
+
+![026_create_document.png](images/026_create_document.png)
+
+Created data:
+![027_create_document.png](images/027_create_document.png)
+
+### Create using command line
+
+First download MongoDB Shell for windows. Installation is not needed, just placed it in some folder and add it to the PATH variable.
+
+![028_create_document.png](images/028_create_document.png)
+
+Next connect to the mongo cluster:
+
+```
+D:\>mongosh "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net/test"
+Current Mongosh Log ID: 60fa8c09a58b733e1ccd8838
+Connecting to:          mongodb+srv://<credentials>@myfirstcluster.a6uds.mongodb.net/test
+Using MongoDB:          4.4.7
+Using Mongosh:          1.0.1
+
+For mongosh info see: https://docs.mongodb.com/mongodb-shell/
+
+
+To help improve our products, anonymous usage data is collected and sent to MongoDB periodically (https://www.mongodb.com/legal/privacy-policy).
+You can opt-out by running the disableTelemetry() command.
+
+Atlas atlas-mritki-shard-0 [primary] test>                                                                              
+```
+
+To check to which DB you are connected run:
+
+```
+Atlas atlas-mritki-shard-0 [primary] test> db
+test
+```
+
+`test` database it is an empty db that`s why it is not displayed in the Compass client, more info [here](https://www.mongodb.com/community/forums/t/no-test-database-is-shown-in-the-compass/92398/3).
+
+Also if we do not specify DB name in connection string by default it connects to the `test` database:
+
+```
+D:\>mongosh "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net"
+Current Mongosh Log ID: 60fa8d55fecbf40cb220486a
+Connecting to:          mongodb+srv://<credentials>@myfirstcluster.a6uds.mongodb.net/
+Using MongoDB:          4.4.7
+Using Mongosh:          1.0.1
+
+For mongosh info see: https://docs.mongodb.com/mongodb-shell/
+
+Atlas atlas-mritki-shard-0 [primary] test> db
+```

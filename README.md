@@ -817,6 +817,13 @@ remove:
 
 but in my examples result schema is always the same so maybe there is no difference.
 
+More about `remove` [here](https://groups.google.com/g/mongodb-user/c/v5JavfJcKQk?pli=1).
+
+
+>"The deleteMany() method was added in MongoDB 3.2 to make the mongo shell CRUD API consistent with the driver API. The remove() method is the historical interface which is available for backward compatibility."
+
+
+
 ```
 Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 35} ).count()
 8

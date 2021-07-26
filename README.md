@@ -34,6 +34,12 @@
       - [projection (selecting which fields should be displayed):](#projection-selecting-which-fields-should-be-displayed)
       - [sorting](#sorting)
       - [specifying read concerns](#specifying-read-concerns)
+  - [Write concerns](#write-concerns)
+  - [Update](#update)
+    - [Update in MongoDB Compass](#update-in-mongodb-compass)
+    - [Update in command line](#update-in-command-line)
+  - [Delete](#delete)
+- ['Foreign key constraint' in MongoDB](#foreign-key-constraint-in-mongodb)
 
 # Basics
 ## MongoDB is document database type.
@@ -517,3 +523,83 @@ db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().lim
 ```
 
 >NOTE: in case very busy system when we run both above queries the second query might return different data then the first query because `linearizable` only returns the data after all the previous write operations commit data into all replicas. QUESTION: really all replicas or majority? [Docs](https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-) says that it is 'https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-'. Also docs says: "  Linearizable read concern guarantees only apply if read operations specify a query filter that uniquely identifies a single document."
+
+## Write concerns
+
+It specifies level of acknowledgement requested from MongoDB for write operations. [Docs](https://docs.mongodb.com/manual/reference/write-concern/).
+
+* w:1 - ack from primary.  Data can be rolled back if the primary steps down before the write operations have replicated to any of the secondaries.
+* w:0 - no ack. However, w: 0 may return information about socket exceptions and networking errors to the application. Data can be rolled back if the primary steps down before the write operations have replicated to any of the secondaries.
+* w:(n) - primary + (n-1) secondary. For example if we have replica set: primary and 2 secondaries then `w:2` then we get ack from primary and one of the secondaries, `w:3` we will get ack from all nodes.
+* w: majority. Requests acknowledgment that write operations have propagated to the calculated majority of the data-bearing voting members (i.e. primary and secondaries with members[n].votes greater than 0). w: majority is the default write concern for most MongoDB configurations. See Implicit Default Write Concern. For example, consider a replica set with 3 voting members, Primary-Secondary-Secondary (P-S-S). For this replica set, calculated majority is two, and the write must propagate to the primary and one secondary to acknowledge the write concern to the client.
+* wtimeout: time limit to prevent write operations from blocking indefinitely. Value 0 means infinity. `wtimeout` is only applicable for w values greater than 1.
+
+## Update
+
+Operations:
+* db.collection.updateOne()
+* db.collection.updateMany()
+* db.collection.replaceOne() - it entirely replace the whole document but `_id` stats the same!
+
+Important points:
+
+* atomic on the level of a single document - so `updateMany` can be partially succeeded.
+* `_id` field cannot be replace with different value.
+* `$set` creates a field if not already existing.
+* `upsert: true` - if a document match the query it will be updated and if nothing is found that a new document will be created.
+
+
+### Update in MongoDB Compass
+
+![036_edit_document.png](images/036_edit_document.png)
+
+### Update in command line
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 12}}, {runtime:1, title:1, year:1, _id:0} ).pretty().limit(3).sort({title: -1})
+[
+  { runtime: 12, title: 'The OldestCrocodile', year: 2005 },
+  { runtime: 12, title: 'The Necktie', year: 2008 },
+  { runtime: 12, title: 'The House of Small Cubes', year: 2008 }
+]
+Atlas atlas-mritki-shard-0 [primary] sample_mflix>  db.movies.updateOne(
+...     { title: {$eq: "The OldestCrocodile"}},
+...     {
+.....           $set: {"title":"The Very New Crocodile", "year": 2020}
+.....   }
+... )
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 12}}, {runtime:1, title:1, year:1, _id:0} ).pretty().limit(3).sort({title: -1})
+[
+  { runtime: 12, title: 'The Very New Crocodile', year: 2020 },
+  { runtime: 12, title: 'The Necktie', year: 2008 },
+  { runtime: 12, title: 'The House of Small Cubes', year: 2008 }
+]
+```
+
+>NOTE: MongoDB is case sensitive, for example if field name is `Year` then `$set: {"year": 2020}` will not update the year but it will create a new field `Year` ! 
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 12}}, {runtime:1, title:1, year:1, Year:1, _id:0} ).pretty().limit(3).sort({title: -1})
+[
+  {
+    runtime: 12,
+    title: 'The Very New Crocodile',
+    year: 2020,
+    Year: 2020
+  },
+  { runtime: 12, title: 'The Necktie', year: 2008 },
+  { runtime: 12, title: 'The House of Small Cubes', year: 2008 }
+]
+```
+
+## Delete
+
+# 'Foreign key constraint' in MongoDB
+
+https://www.mongodb.com/community/forums/t/foreign-key-constraint/5814

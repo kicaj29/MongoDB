@@ -11,6 +11,7 @@
     - [Load sample data](#load-sample-data)
     - [Monitor create cluster](#monitor-create-cluster)
     - [View sample data](#view-sample-data)
+    - [DB access](#db-access)
 - [CRUD operations](#crud-operations)
   - [Create](#create)
     - [Create using MongoDB Compass](#create-using-mongodb-compass)
@@ -129,6 +130,13 @@ In MongoDB Compass:
 ![022_view-sample-data.png](images/022_view-sample-data.png)
 
 ![023_view-sample-data.png](images/023_view-sample-data.png)
+
+### DB access
+
+To get access to mongo DB make sure that your IP address is added to the whitelist:
+
+![035_network_access.png](images/035_network_access.png)
+
 
 # CRUD operations
 

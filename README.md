@@ -26,6 +26,14 @@
     - [Read concerns](#read-concerns)
     - [Reading using MongoDB compass](#reading-using-mongodb-compass)
     - [Reading using command line](#reading-using-command-line)
+      - [select existing DB](#select-existing-db)
+      - [list of collections](#list-of-collections)
+      - [query all movies](#query-all-movies)
+      - [returns next set of results](#returns-next-set-of-results)
+      - [pretty](#pretty)
+      - [projection (selecting which fields should be displayed):](#projection-selecting-which-fields-should-be-displayed)
+      - [sorting](#sorting)
+      - [specifying read concerns](#specifying-read-concerns)
 
 # Basics
 ## MongoDB is document database type.
@@ -398,9 +406,12 @@ Allows to control the consistency and isolation properties of the data read from
 
 * Available: the same local but it is default when we read from the secondary replica set. 
 
-* Majority: this is the default for all the fix operators if you do not specify and of the read concerns. In this case the query returns a data that has been acknowledged by the majority of the replica set members. The documents returned by the read operation are durable, even in the event of failure.
+* Majority: **this is the default for all the fix operators if you do not specify and of the read concerns.** It is default read concern for `db.find` function. In this case the query returns a data that has been acknowledged by the majority of the replica set members. The documents returned by the read operation are durable, even in the event of failure.
 
-* Linearisible: the query returns data that reflects all successful majority-acknowledged writes that completed prior to the start of the read operation. The query may wait for concurrently executing writes to propagate to a majority of replica set members before returning results.
+* Linearisible: the query returns data that reflects all successful majority-acknowledged writes that completed prior to the start of the read operation. The query may wait for concurrently executing writes to propagate to a majority of replica set members before returning results.   
+  You can specify linearizable read concern for read operations on the primary only.
+
+  Linearizable read concern guarantees only apply if read operations specify a query filter that uniquely identifies a single document.
 
 * Snapshot
   * If the transaction is not part of a causally consistent session, upon transaction commit with write concern "majority", the transaction operations are guaranteed to have read from a snapshot of majority-committed data.
@@ -430,3 +441,79 @@ Using options:
 
 ### Reading using command line
 
+Connect to DB:
+
+```
+D:\>mongosh "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net"
+Current Mongosh Log ID: 60fe69b45196251cb4d2261e
+Connecting to:          mongodb+srv://<credentials>@myfirstcluster.a6uds.mongodb.net/
+Using MongoDB:          4.4.7
+Using Mongosh:          1.0.1
+
+For mongosh info see: https://docs.mongodb.com/mongodb-shell/
+
+Atlas atlas-mritki-shard-0 [primary] test>
+```
+
+#### select existing DB
+```
+use sample_mflix
+```
+
+#### list of collections
+```
+show collections
+```
+
+#### query all movies
+```
+db.movies.find({}).pretty()
+```
+
+#### returns next set of results
+```
+it
+```
+
+#### pretty
+
+```
+db.movies.find( {runtime: 11} ).pretty()
+db.movies.find( {runtime: 11} ).pretty().limit(3)
+```
+
+#### projection (selecting which fields should be displayed):
+```
+db.movies.find( {runtime: 11}, {runtime:1, title:1, _id:0} ).pretty().limit(3)
+```
+
+#### sorting
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: 1})
+[
+  { runtime: 11, title: '9' },
+  { runtime: 11, title: 'A Is for Autism' },
+  { runtime: 11, title: 'Apricot' }
+]
+
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: -1})
+[
+  { runtime: 11, title: 'Your Friend the Rat' },
+  { runtime: 11, title: 'The Portal' },
+  {
+    runtime: 11,
+    title: 'The Life and Death of 9413, a Hollywood Extra'
+  }
+]
+```
+
+#### specifying read concerns
+```
+db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: -1}).readConcern("majority")
+```
+
+```
+db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: -1}).readConcern("linearizable").maxTimeMS(10000)
+```
+
+>NOTE: in case very busy system when we run both above queries the second query might return different data then the first query because `linearizable` only returns the data after all the previous write operations commit data into all replicas. QUESTION: really all replicas or majority? [Docs](https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-) says that it is 'https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-'. Also docs says: "  Linearizable read concern guarantees only apply if read operations specify a query filter that uniquely identifies a single document."

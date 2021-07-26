@@ -40,7 +40,15 @@
     - [Update in command line](#update-in-command-line)
       - [Update single document](#update-single-document)
       - [Update multiple documents](#update-multiple-documents)
+        - [Using `upsert`](#using-upsert)
+      - [Specify write concern](#specify-write-concern)
+    - [Replace command](#replace-command)
   - [Delete](#delete)
+    - [Delete in MongoDB Compass](#delete-in-mongodb-compass)
+    - [Delete in command line](#delete-in-command-line)
+      - [Delete one](#delete-one)
+      - [Delete many](#delete-many)
+      - [Remove](#remove)
 - ['Foreign key constraint' in MongoDB](#foreign-key-constraint-in-mongodb)
 
 # Basics
@@ -541,7 +549,7 @@ It specifies level of acknowledgement requested from MongoDB for write operation
 Operations:
 * db.collection.updateOne()
 * db.collection.updateMany()
-* db.collection.replaceOne() - it entirely replace the whole document but `_id` stats the same!
+* db.collection.replaceOne() - it entirely replaces the whole document but `_id` stays the same!
 
 Important points:
 
@@ -604,7 +612,239 @@ Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$e
 
 #### Update multiple documents
 
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 1988}}).count()
+265
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 2025}}).count()
+0
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.updateMany(
+...     { year: {$eq: 1988}},
+...     {
+.....     $set: {"year": 2025}
+.....   }
+... )
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 265,
+  modifiedCount: 265,
+  upsertedCount: 0
+}
+```
+
+##### Using `upsert`
+
+This example inserts **one document** with year 1988 but next it is updated to value 2025.
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 1988}}).count()
+0
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 2025}}).count()
+265
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.updateMany(
+...     { year: {$eq: 1988}},
+...     {
+.....     $set: {"year": 2025}
+.....   },
+...     { upsert: true }
+... )
+{
+  acknowledged: true,
+  insertedId: ObjectId("60feba97b66ffeeafd3496d4"),
+  matchedCount: 0,
+  modifiedCount: 0,
+  upsertedCount: 1
+}
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 1988}}).count()
+0
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 2025}}).count()
+266
+```
+
+In this example we insert a document with year set on 1988 and next we update this document by adding new fields `title` and `awards.wins`:
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 2025}}).count()
+266
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 1988}}).count()
+0
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.updateMany(
+...     { year: {$eq: 1988}},
+...     {
+.....     $set: {"title": "MySuperFunnyTitle", "awards.wins": 9}
+.....   },
+...     { upsert: true }
+... )
+{
+  acknowledged: true,
+  insertedId: ObjectId("60febd8bb66ffeeafd3c9231"),
+  matchedCount: 0,
+  modifiedCount: 0,
+  upsertedCount: 1
+}
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 1988}}).count()
+1
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 2025}}).count()
+266
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find({year: {$eq: 1988}}).pretty()
+[
+  {
+    _id: ObjectId("60febd8bb66ffeeafd3c9231"),
+    year: 1988,
+    awards: { wins: 9 },
+    title: 'MySuperFunnyTitle'
+  }
+]
+```
+
+#### Specify write concern
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.updateMany(
+...     { runtime: {$eq: 1122}},
+...     {
+.....     $set: {"title": "MySuperFunnyTitle", "Year": 2020, "awards.wins": 9}
+.....   },
+...     { upsert: true, w:"majority", wtimeout: 1000 }
+... )
+{
+  acknowledged: true,
+  insertedId: ObjectId("60febefcb66ffeeafd408669"),
+  matchedCount: 0,
+  modifiedCount: 0,
+  upsertedCount: 1
+}
+```
+
+### Replace command
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 1122 }).pretty()
+[
+  {
+    _id: ObjectId("60febefcb66ffeeafd408669"),
+    runtime: 1122,
+    Year: 2020,
+    awards: { wins: 9 },
+    title: 'MySuperFunnyTitle'
+  }
+]
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.replaceOne(
+...     {runtime: {$eq: 1122}},
+...     {
+.....      runtime: 1122,
+.....      "NoTitile": "ReplaceOneExample",
+.....      "NewYear": 2020,
+.....      "awards.losts": 5
+.....   }
+... )
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 1122 }).pretty()
+[
+  {
+    _id: ObjectId("60febefcb66ffeeafd408669"),
+    runtime: 1122,
+    NoTitile: 'ReplaceOneExample',
+    NewYear: 2020,
+    'awards.losts': 5
+  }
+]
+```
+
 ## Delete
+
+* all write operations in MongoDB are atomic on the level of single document
+* delete does not drop indexes - they have to be explicitly deleted
+
+Operations:
+
+* db.collection.deleteOne()
+* db.collection.deleteMany()
+* db.collection.remove()
+
+### Delete in MongoDB Compass
+
+![037_delete_in_compass.png](images/037_delete_in_compass.png)
+
+![038_delete_in_compass.png](images/038_delete_in_compass.png)
+
+### Delete in command line
+
+#### Delete one
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 25} ).count()
+13
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.deleteOne( {runtime: 25} )
+{ acknowledged: true, deletedCount: 1 }
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 25} ).count()
+12
+```
+
+#### Delete many
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 25} ).count()
+12
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.deleteMany( {runtime: 25} )
+{ acknowledged: true, deletedCount: 12 }
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 25} ).count()
+0
+```
+
+#### Remove
+
+In general remove works the same as delete but it returns different information are the result of this operation.
+
+Docs say that [delete](https://docs.mongodb.com/manual/reference/method/db.collection.remove/) and [remove](https://docs.mongodb.com/manual/reference/method/db.collection.remove/) returns different result types
+
+delete:
+```
+{
+  acknowledged: true/false,
+  deletedCount: n
+}
+```
+remove:
+```
+{ "nRemoved" : n }
+```
+
+but in my examples result schema is always the same so maybe there is no difference.
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 35} ).count()
+8
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.remove( {runtime: 35}, true )
+{ acknowledged: true, deletedCount: 1 }
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 35} ).count()
+7
+```
+
+Used parameter `true` tells to remove only single document within a collection.
+
+
+If we do not use this parameter then all matched documents will be deleted:
+
+```
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 35} ).count()
+7
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.remove( {runtime: 35})
+{ acknowledged: true, deletedCount: 7 }
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 35} ).count()
+0
+```
+
+To remove all documents from a collection:
+
+```
+db.movies.remove({})
+```
 
 # 'Foreign key constraint' in MongoDB
 

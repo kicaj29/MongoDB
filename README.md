@@ -38,6 +38,8 @@
   - [Update](#update)
     - [Update in MongoDB Compass](#update-in-mongodb-compass)
     - [Update in command line](#update-in-command-line)
+      - [Update single document](#update-single-document)
+      - [Update multiple documents](#update-multiple-documents)
   - [Delete](#delete)
 - ['Foreign key constraint' in MongoDB](#foreign-key-constraint-in-mongodb)
 
@@ -555,6 +557,8 @@ Important points:
 
 ### Update in command line
 
+#### Update single document
+
 ```
 Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 12}}, {runtime:1, title:1, year:1, _id:0} ).pretty().limit(3).sort({title: -1})
 [
@@ -597,6 +601,8 @@ Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$e
   { runtime: 12, title: 'The House of Small Cubes', year: 2008 }
 ]
 ```
+
+#### Update multiple documents
 
 ## Delete
 

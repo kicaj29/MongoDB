@@ -50,6 +50,17 @@
       - [Delete many](#delete-many)
       - [Remove](#remove)
 - ['Foreign key constraint' in MongoDB](#foreign-key-constraint-in-mongodb)
+- [Relational SQL vs Document DB](#relational-sql-vs-document-db)
+- [Common SQL concepts and semantics to MongoDB](#common-sql-concepts-and-semantics-to-mongodb)
+  - [Create table/collection](#create-tablecollection)
+  - [Add columns/fields](#add-columnsfields)
+  - [Create index](#create-index)
+  - [Insert statement](#insert-statement)
+  - [Select statement](#select-statement)
+  - [Select statement - filter](#select-statement---filter)
+  - [Update statement](#update-statement)
+  - [Delete statement](#delete-statement)
+  - [Drop table/collection](#drop-tablecollection)
 
 # Basics
 ## MongoDB is document database type.
@@ -856,3 +867,142 @@ db.movies.remove({})
 # 'Foreign key constraint' in MongoDB
 
 https://www.mongodb.com/community/forums/t/foreign-key-constraint/5814
+
+# Relational SQL vs Document DB
+
+![039_sql_vs_documentdb.png](images/039_sql_vs_documentdb.png)
+
+![040_sql_vs_documentdb.png](images/040_sql_vs_documentdb.png)
+
+# Common SQL concepts and semantics to MongoDB
+
+## Create table/collection
+```
+CREATE TABLE user (
+id MEDIUMINT NOT NULL 
+AUTO_INCREMENT,
+name varchar(50),
+age int,
+PRIMARY KEY (id)
+)
+```
+```
+db.createCollection(“user")
+db.user.insertOne({
+name: “John Smith”, 
+age: 42
+})
+```
+
+## Add columns/fields
+```
+ALTER TABLE user
+ADD email varchar(100)
+```
+```
+db.user.updateMany(
+{ },
+{ $set: { email: '' } }
+)
+```
+
+## Create index
+```
+CREATE INDEX
+idx_user_name_age
+ON user(name, age DESC)
+```
+```
+db.people.createIndex( 
+{ name: 1, age: -1 } 
+)
+```
+
+## Insert statement
+```
+NSERT INTO user (name, age, 
+email)
+VALUES (‘Roger’, 46, 
+‘roger@email.com’)
+```
+```
+db.user.insertOne(
+{
+name: “Roger”, 
+age: 46,
+email: “roger@email.com” 
+}
+)
+```
+## Select statement
+```
+SELECT * FROM user
+```
+```
+db.user.find()
+db.user.find( {} )
+```
+
+## Select statement - filter
+```
+ELECT name, age
+FROM user
+WHERE age > 20
+```
+```
+db.user.find(
+{ age: { $gt: 20 } },
+{name: 1, age: 1, _id: 0 }
+)
+```
+```
+SELECT name, age
+FROM user
+WHERE age > 20
+LIMIT 5
+SKIP 10
+```
+```
+SELECT name, age
+FROM user
+WHERE age > 20
+LIMIT 5
+SKIP 10
+```
+
+## Update statement
+```
+UPDATE user
+SET email = ‘NA’
+WHERE age < 18
+```
+```
+db.user.updateMany(
+{ age: { $lt: 18 } },
+{ $set: {email : “NA" } }
+)
+```
+## Delete statement
+```
+DELETE FROM user
+WHERE age < 18
+```
+```
+db.user.deleteMany(
+{ age: { $lt: 18 } })
+```
+Delete all:
+```
+DELETE FROM user
+```
+```
+db.user.deleteMany( {} 
+```
+
+## Drop table/collection
+```
+DROP TABLE user
+```
+```
+db.user.drop()
+```

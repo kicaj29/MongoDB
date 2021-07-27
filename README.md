@@ -34,6 +34,7 @@
       - [projection (selecting which fields should be displayed):](#projection-selecting-which-fields-should-be-displayed)
       - [sorting](#sorting)
       - [specifying read concerns](#specifying-read-concerns)
+  - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
   - [Update](#update)
     - [Update in MongoDB Compass](#update-in-mongodb-compass)
@@ -498,6 +499,10 @@ db.movies.find({}).pretty()
 ```
 
 #### returns next set of results
+
+By default mongodb splits the output of batches of 20 objects.
+To navigate to the next batch type `it`.
+
 ```
 it
 ```
@@ -513,6 +518,8 @@ db.movies.find( {runtime: 11} ).pretty().limit(3)
 ```
 db.movies.find( {runtime: 11}, {runtime:1, title:1, _id:0} ).pretty().limit(3)
 ```
+
+> If we specify columns with only 0 value then all not listed columns will be returned.
 
 #### sorting
 ```
@@ -544,6 +551,10 @@ db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().lim
 ```
 
 >NOTE: in case very busy system when we run both above queries the second query might return different data then the first query because `linearizable` only returns the data after all the previous write operations commit data into all replicas. QUESTION: really all replicas or majority? [Docs](https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-) says that it is 'https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-'. Also docs says: "  Linearizable read concern guarantees only apply if read operations specify a query filter that uniquely identifies a single document."
+
+## Cursor
+
+Cursor is a virtual object where MongoDB stores the documents returned by the find method.
 
 ## Write concerns
 

@@ -37,6 +37,10 @@
       - [filtering by date](#filtering-by-date)
       - [comparing arrays](#comparing-arrays)
       - [comparing objects](#comparing-objects)
+      - [comparing floating points and integers](#comparing-floating-points-and-integers)
+      - [$in and $nin](#in-and-nin)
+        - [$in with array field](#in-with-array-field)
+        - [$in and regex](#in-and-regex)
       - [specifying read concerns](#specifying-read-concerns)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
@@ -576,6 +580,12 @@ If we specify only date then implicitly time value 12am is appended:
 db.flights.find({departureDate: ISODate("2020-02-20")})
 ```
 
+but we can use for example `$lt` or `gt` and skip time in comparison:
+
+```
+db.flights.find({departureDate: { $gt: ISODate("2020-02-20")} })
+```
+
 #### comparing arrays
 
 >Arrays are the same if they have the same elements in the same order. So it has to exact match to be returned by the query.
@@ -609,7 +619,7 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: ["technic
 
 #### comparing objects
 
-> Similar like for arrays here also both objects have to be exactly the same to be returned by the query (keys/values/order of keys).
+> Similar like for arrays here also both objects have to be exactly the same to be returned by the query (keys/values/order of keys). The second query will return no data.
 
 ```
 Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({address: {city: "Paris", country: "France"}})
@@ -622,6 +632,133 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({address: {city: "
   }
 ]
 Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({address: {city: "Paris"}})
+```
+
+#### comparing floating points and integers
+
+> It looks that floating numbers are not rounded in comparisons.
+
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({ range: { $lt: 3219.45} })
+[
+  {
+    _id: ObjectId("60fffe350dcd6a577496a797"),
+    code: '0c3a60d6-8c99-472e-bf23-c1e689c5f6eb',
+    model: 'ATR 72',
+    minRunwayLength: 1000,
+    range: 3218,
+    capacity: 78
+  }
+]
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({ range: { $lt: 3217.99} })
+
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({ range: { $lt: 3218.99} })
+[
+  {
+    _id: ObjectId("60fffe350dcd6a577496a797"),
+    code: '0c3a60d6-8c99-472e-bf23-c1e689c5f6eb',
+    model: 'ATR 72',
+    minRunwayLength: 1000,
+    range: 3218,
+    capacity: 78
+  }
+]
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({ range: { $lt: 3218.01} })
+[
+  {
+    _id: ObjectId("60fffe350dcd6a577496a797"),
+    code: '0c3a60d6-8c99-472e-bf23-c1e689c5f6eb',
+    model: 'ATR 72',
+    minRunwayLength: 1000,
+    range: 3218,
+    capacity: 78
+  }
+]
+```
+
+#### $in and $nin
+
+>$in: selects documents where the value of a field equals any value in a specified array.
+
+>$nin: selects documents where the value of a field is not found in a specified array. 
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({model: {$in: ["Boeing 737-800", "Airbus A320"]}})
+[
+  {
+    _id: ObjectId("60fffe350dcd6a577496a799"),
+    code: 'eede6be6-f716-4e2e-bf81-885f0a16a50c',
+    model: 'Boeing 737-800',
+    minRunwayLength: 2500,
+    range: 5765,
+    capacity: 200
+  },
+  {
+    _id: ObjectId("60fffe350dcd6a577496a79b"),
+    code: '1b7ad0de-5836-489b-9791-5a81a51cdb81',
+    model: 'Airbus A320',
+    minRunwayLength: 2500,
+    range: 6000,
+    capacity: 150
+  }
+]
+```
+
+##### $in with array field
+
+>If there is at least one value from the array in the object that is equal to one value from array filter then the object will be returned.
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: {$in: ["technical", "engineering"]}})
+[
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f43"),
+    name: 'Gunter Hoff',
+    skills: [ 'engineering' ],
+    address: { city: 'Berlin', country: 'Germany' }
+  },
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f44"),
+    name: 'Andrei Luca',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  },
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f45"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  }
+]
+```
+
+##### $in and regex
+
+Returns all crew objects where at least one skill starts from "te" or contains "ee".
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: {$in: [/^te/, /ee/]}})
+[
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f43"),
+    name: 'Gunter Hoff',
+    skills: [ 'engineering' ],
+    address: { city: 'Berlin', country: 'Germany' }
+  },
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f44"),
+    name: 'Andrei Luca',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  },
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f45"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  }
+]
 ```
 
 #### specifying read concerns

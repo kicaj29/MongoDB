@@ -35,6 +35,8 @@
       - [sorting](#sorting)
       - [findOne](#findone)
       - [filtering by date](#filtering-by-date)
+      - [comparing arrays](#comparing-arrays)
+      - [comparing objects](#comparing-objects)
       - [specifying read concerns](#specifying-read-concerns)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
@@ -64,6 +66,7 @@
   - [Update statement](#update-statement)
   - [Delete statement](#delete-statement)
   - [Drop table/collection](#drop-tablecollection)
+- [Importing data](#importing-data)
 
 # Basics
 ## MongoDB is document database type.
@@ -573,6 +576,54 @@ If we specify only date then implicitly time value 12am is appended:
 db.flights.find({departureDate: ISODate("2020-02-20")})
 ```
 
+#### comparing arrays
+
+>Arrays are the same if they have the same elements in the same order. So it has to exact match to be returned by the query.
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: ["engineering"]})
+[
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f43"),
+    name: 'Gunter Hoff',
+    skills: [ 'engineering' ],
+    address: { city: 'Berlin', country: 'Germany' }
+  }
+]
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: ["technical", "management"]})
+[
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f44"),
+    name: 'Andrei Luca',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  },
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f45"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  }
+]
+```
+
+#### comparing objects
+
+> Similar like for arrays here also both objects have to be exactly the same to be returned by the query (keys/values/order of keys).
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({address: {city: "Paris", country: "France"}})
+[
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f42"),
+    name: 'Francois Picard',
+    skills: [],
+    address: { city: 'Paris', country: 'France' }
+  }
+]
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({address: {city: "Paris"}})
+```
+
 #### specifying read concerns
 ```
 db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: -1}).readConcern("majority")
@@ -1064,4 +1115,32 @@ DROP TABLE user
 ```
 ```
 db.user.drop()
+```
+
+# Importing data
+
+Install [Database Tools](https://docs.mongodb.com/database-tools/installation/installation-windows/).
+
+Next run (it will create the database if it does not exist):
+
+```
+PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" --file aircraft.json --collection aircraft --db flightmgmt --drop  2021-07-27T14:38:13.190+0200    connected to: mongodb+srv://[**REDACTED**]@myfirstcluster.a6uds.mongodb.net
+2021-07-27T14:38:13.219+0200    dropping: flightmgmt.aircraft
+2021-07-27T14:38:13.309+0200    9 document(s) imported successfully. 0 document(s) failed to import.
+```
+
+and second collection:
+```
+PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" --file flights.json --collection flights --db flightmgmt --drop
+2021-07-27T14:40:59.649+0200    connected to: mongodb+srv://[**REDACTED**]@myfirstcluster.a6uds.mongodb.net
+2021-07-27T14:40:59.679+0200    dropping: flightmgmt.flights
+2021-07-27T14:40:59.771+0200    10 document(s) imported successfully. 0 document(s) failed to import.
+```
+
+and next
+```
+PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" --file crew.json --collection crew --db flightmgmt --drop
+2021-07-27T14:44:21.094+0200    connected to: mongodb+srv://[**REDACTED**]@myfirstcluster.a6uds.mongodb.net
+2021-07-27T14:44:21.125+0200    dropping: flightmgmt.crew
+2021-07-27T14:44:21.217+0200    4 document(s) imported successfully. 0 document(s) failed to import.
 ```

@@ -33,6 +33,8 @@
       - [pretty](#pretty)
       - [projection (selecting which fields should be displayed):](#projection-selecting-which-fields-should-be-displayed)
       - [sorting](#sorting)
+      - [findOne](#findone)
+      - [filtering by date](#filtering-by-date)
       - [specifying read concerns](#specifying-read-concerns)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
@@ -522,6 +524,9 @@ db.movies.find( {runtime: 11}, {runtime:1, title:1, _id:0} ).pretty().limit(3)
 > If we specify columns with only 0 value then all not listed columns will be returned.
 
 #### sorting
+
+> MongoDB does not guarantee the order of the returned documents unless you use sort().
+
 ```
 Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: 1})
 [
@@ -541,6 +546,33 @@ Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$e
 ]
 ```
 
+#### findOne
+
+```
+db.collection.findOne([query], [projection]): document
+```
+
+* by default, it returns the document that matches the criteria
+* if multiple documents match the criteria, the method returns the first document according to the order the documents are stored on disk
+* if no documents match the criteria, the method returns null
+
+Methods from `cursor` object like `pretty` or `count` are not available here because returned data type is `document` and not an object.
+
+#### filtering by date
+
+```
+db.flights.find({departureDate: ISODate("2020-02-20T23:00:00Z")})
+```
+or we can create an object:
+```
+db.flights.find({departureDate: ISODate("2020-02-20T23:00:00Z")})
+```
+
+If we specify only date then implicitly time value 12am is appended:
+```
+db.flights.find({departureDate: ISODate("2020-02-20")})
+```
+
 #### specifying read concerns
 ```
 db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: -1}).readConcern("majority")
@@ -555,6 +587,22 @@ db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().lim
 ### Cursor
 
 Cursor is a virtual object where MongoDB stores the documents returned by the find method.
+
+Some of cursor methods:
+
+```
+db.collection.find().pretty()
+db.collection.find().limit(5)
+db.collection.find().skip(3)
+db.collection.find().sort({...})
+db.collection.find().count()
+```
+
+Combinations are also allowed:
+
+```
+db.collection.find().skip(2).limit(2)
+```
 
 ## Write concerns
 

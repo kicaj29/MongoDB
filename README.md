@@ -953,7 +953,7 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({ $text: { $search
 
 ##### full text search relevance
 
-You can aggregate results by score using the `$meta` projection operator.
+You can aggregate results by score using the `$meta` projection operator. Next you can sort by the score to have most relevant results on the top.
 
 No documents are returned:
 ```

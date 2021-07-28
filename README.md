@@ -47,6 +47,7 @@
         - [querying null fields and checking if field exist](#querying-null-fields-and-checking-if-field-exist)
         - [querying by checking field types](#querying-by-checking-field-types)
       - [specifying read concerns](#specifying-read-concerns)
+      - [free text search](#free-text-search)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
   - [Update](#update)
@@ -896,6 +897,12 @@ db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().lim
 ```
 
 >NOTE: in case very busy system when we run both above queries the second query might return different data then the first query because `linearizable` only returns the data after all the previous write operations commit data into all replicas. QUESTION: really all replicas or majority? [Docs](https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-) says that it is 'https://docs.mongodb.com/manual/reference/read-concern-linearizable/#mongodb-readconcern-readconcern.-linearizable-'. Also docs says: "  Linearizable read concern guarantees only apply if read operations specify a query filter that uniquely identifies a single document."
+
+#### free text search
+
+* text index
+  * support fast text searches on string and arrays of string fields
+  * you cannot perform free text searches without a text index
 
 ### Cursor
 

@@ -41,6 +41,7 @@
       - [$in and $nin](#in-and-nin)
         - [$in with array field](#in-with-array-field)
         - [$in and regex](#in-and-regex)
+      - [logical query operators AND/OR and between](#logical-query-operators-andor-and-between)
       - [specifying read concerns](#specifying-read-concerns)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
@@ -760,6 +761,52 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: {$in: [/^
   }
 ]
 ```
+
+#### logical query operators AND/OR and between
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({ $and: [ {capacity: 150}, {range: {$gt: 5000}}] }).pretty()
+[
+  {
+    _id: ObjectId("60fffe350dcd6a577496a79b"),
+    code: '1b7ad0de-5836-489b-9791-5a81a51cdb81',
+    model: 'Airbus A320',
+    minRunwayLength: 2500,
+    range: 6000,
+    capacity: 150
+  }
+]
+```
+
+between:
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({ $and: [ {range: {$lt: 6050}},  {range: {$gt: 5900}}] }).pretty()
+[
+  {
+    _id: ObjectId("60fffe350dcd6a577496a79b"),
+    code: '1b7ad0de-5836-489b-9791-5a81a51cdb81',
+    model: 'Airbus A320',
+    minRunwayLength: 2500,
+    range: 6000,
+    capacity: 150
+  }
+]
+```
+another syntax of between:
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({range: {$lt: 6050, $gt: 5900}}).pretty()
+[
+  {
+    _id: ObjectId("60fffe350dcd6a577496a79b"),
+    code: '1b7ad0de-5836-489b-9791-5a81a51cdb81',
+    model: 'Airbus A320',
+    minRunwayLength: 2500,
+    range: 6000,
+    capacity: 150
+  }
+]
+```
+
 
 #### specifying read concerns
 ```

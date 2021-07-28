@@ -48,6 +48,7 @@
         - [querying by checking field types](#querying-by-checking-field-types)
       - [specifying read concerns](#specifying-read-concerns)
       - [free text search](#free-text-search)
+        - [full text search relevance](#full-text-search-relevance)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
   - [Update](#update)
@@ -903,6 +904,60 @@ db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().lim
 * text index
   * support fast text searches on string and arrays of string fields
   * you cannot perform free text searches without a text index
+
+
+* first create text index for fields `name` and `skills`.
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.createIndex({name: "text", skills: "text"})
+name_text_skills_text
+```
+
+* next run the search
+
+It looks that text search is not case sensitive and it works SOMETIMES with "starts with" substrings. TBD: what are the rules???
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({ $text: { $search: "Engineering anna"} })
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accb"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  },
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accd"),
+    name: 'Gunter Hoff',
+    skills: [ 'engineering' ],
+    address: { city: 'Berlin', country: 'Germany' }
+  }
+]
+```
+
+It is not clear why `Anna Smith` is not returned by this query:
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({ $text: { $search: "Engineer Ann"} })
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accd"),
+    name: 'Gunter Hoff',
+    skills: [ 'engineering' ],
+    address: { city: 'Berlin', country: 'Germany' }
+  },
+```
+but this query will return no documents at all (maybe because `Enginee` is not an English word???):
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({ $text: { $search: "Enginee Ann"} })
+
+```
+
+##### full text search relevance
+
+You can aggregate results by score using the `$meta` projection operator.
+
+No documents are returned:
+```
+```
 
 ### Cursor
 

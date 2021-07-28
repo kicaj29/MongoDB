@@ -18,3 +18,22 @@
 	"skills": ["engineering"],
 	"address": {"city": "Berlin", "country": "Germany"}
 }
+{
+	"name": "Jacek",
+	"skills": ["engineering"],
+	"address": "Poland, Kościuszki 145"
+}
+{
+	"name": "Placek",
+	"skills": ["engineering"],
+	"address": null
+}
+{
+	"name": "Antek",
+	"skills": ["engineering"],
+	"address": ""
+}
+{
+	"name": "Antek2",
+	"skills": ["engineering"]
+}

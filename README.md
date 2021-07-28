@@ -42,6 +42,10 @@
         - [$in with array field](#in-with-array-field)
         - [$in and regex](#in-and-regex)
       - [logical query operators AND/OR and between](#logical-query-operators-andor-and-between)
+      - [querying nested documents](#querying-nested-documents)
+      - [querying null fields, missing field and field types](#querying-null-fields-missing-field-and-field-types)
+        - [querying null fields and checking if field exist](#querying-null-fields-and-checking-if-field-exist)
+        - [querying by checking field types](#querying-by-checking-field-types)
       - [specifying read concerns](#specifying-read-concerns)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
@@ -807,6 +811,80 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.aircraft.find({range: {$lt: 
 ]
 ```
 
+#### querying nested documents
+
+> When you refer to nested objects then you have to use `.` and because of this the path has to be in `""`.
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({"address.city": "Berlin"}).pretty()
+[
+  {
+    _id: ObjectId("60ffffa5f723cd527c447f43"),
+    name: 'Gunter Hoff',
+    skills: [ 'engineering' ],
+    address: { city: 'Berlin', country: 'Germany' }
+  }
+]
+```
+
+#### querying null fields, missing field and field types
+
+
+##### querying null fields and checking if field exist
+
+* `''` and `null` are not equal
+
+* querying for null fields will return docs where value is null or the field does not exist
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find( {address: null} ).pretty();
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0acc6"),
+    name: 'Antek2',
+    skills: [ 'engineering' ]
+  },
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0acc9"),
+    name: 'Placek',
+    skills: [ 'engineering' ],
+    address: null
+  }
+]
+```
+
+* querying for documents where a field exist
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find( {address: {$exists: false}} ).pretty();
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0acc6"),
+    name: 'Antek2',
+    skills: [ 'engineering' ]
+  }
+]
+```
+
+##### querying by checking field types
+
+By familiar with BSON types: [docs](https://docs.mongodb.com/manual/reference/bson-types/). For example 1 means `double`.
+
+* find all objects where address is object
+```
+db.crew.find( {address: {$type: "object"}} ).pretty();
+db.crew.find( {address: {$type: 3}} ).pretty();
+```
+
+* find all objects where address is string
+```
+db.crew.find( {address: {$type: "string"}} ).pretty();
+db.crew.find( {address: {$type: 2}} ).pretty();
+```
+
+* find all objects where address is null type (it will return only objects where `address` field exist and is null type)
+```
+ db.crew.find( {address: {$type: null}} ).pretty();
+ db.crew.find( {address: {$type: 10}} ).pretty();
+```
 
 #### specifying read concerns
 ```

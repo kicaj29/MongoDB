@@ -37,6 +37,7 @@
       - [filtering by date](#filtering-by-date)
       - [comparing arrays](#comparing-arrays)
         - [array query operators](#array-query-operators)
+        - [array projection operators](#array-projection-operators)
       - [comparing objects](#comparing-objects)
       - [comparing floating points and integers](#comparing-floating-points-and-integers)
       - [$in and $nin](#in-and-nin)
@@ -742,6 +743,46 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.flights.find({crew: {$elemMa
   }
 ]
 ```
+
+##### array projection operators
+
+Can be used to determine which elements of an array should be returned or hidden from a query.
+
+* $slice: limits the number of items in an array that a query returns
+
+Return only first element from the crew array:
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.flights.find({crew: {$elemMatch: {name: "Gotthard Merz", hoursSlept: 6}}}, {crew: {$slice: 1}})
+[
+  {
+    _id: ObjectId("60fffedb66fa675f8e5f8869"),
+    type: 'Intercontinental',
+    delayed: false,
+    duration: 600,
+    departureDate: ISODate("2020-03-20T18:10:00.000Z"),
+    distanceKm: 6400,
+    departure: {
+      code: 'MUC',
+      city: 'Munich',
+      country: 'Germany',
+      runwayLength: 4000,
+      location: { type: 'Point', coordinates: [ 11.7, 48.3 ] }
+    },
+    destination: {
+      code: 'JFK',
+      city: 'New York',
+      country: 'USA',
+      runwayLength: 4423,
+      location: { type: 'Point', coordinates: [ -74, 40.7 ] }
+    },
+    aircraftCode: '00126a63-f342-4ccd-ba86-4a7beecf10c0',
+    crew: [ { name: 'Marcel Danzig', position: 'Captain', hoursSlept: 7 } ]
+  }
+]
+```
+
+* $
+* $ elemMatch
 
 #### comparing objects
 

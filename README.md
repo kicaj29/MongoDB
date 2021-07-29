@@ -787,7 +787,24 @@ Another version can skip n elements and next return m elements:
 db.flights.find({}, {crew: {$slice: [1,1]}})
 ```
 
-* $
+* $: given the fact that you have an array field in the query document, the $ operator limits the array content to the first N elements that matches the query condition
+
+For example show first element that matches an array query:
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: "management"}, {"skills.$": 1})
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accb"),
+    skills: [ 'management' ]
+  },
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accc"),
+    skills: [ 'management' ]
+  }
+]
+```
+
 * $ elemMatch
 
 #### comparing objects

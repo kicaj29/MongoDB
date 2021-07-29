@@ -914,7 +914,7 @@ name_text_skills_text
 
 * next run the search
 
-It looks that text search is not case sensitive and it works SOMETIMES with "starts with" substrings. TBD: what are the rules???
+It looks that text search is not case sensitive and it works SOMETIMES with "starts with" substrings. TBD: what are the rules? Maybe the search text has to be a full world and then the results might be returned.
 
 ```
 Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({ $text: { $search: "Engineering anna"} })
@@ -955,8 +955,28 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({ $text: { $search
 
 You can aggregate results by score using the `$meta` projection operator. Next you can sort by the score to have most relevant results on the top.
 
-No documents are returned:
 ```
+db.crew.find({ $text: { $search: "Engineering anna"} }, {score: {$meta: "textScore"}})
+[
+ {
+    _id: ObjectId("61014b1c5b94f0bdbef0accd"),
+    name: 'Gunter Hoff',
+    skills: [ 'engineering' ],
+    address: { city: 'Berlin', country: 'Germany' },
+    score: 1
+  },
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accb"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' },
+    score: 0.75
+  }  
+]
+```
+
+```
+db.crew.find({ $text: { $search: "Engineering anna"} }, {score: {$meta: "textScore"}}).sort({score: {$meta: "textScore"}})
 ```
 
 ### Cursor

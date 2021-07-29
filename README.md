@@ -36,6 +36,7 @@
       - [findOne](#findone)
       - [filtering by date](#filtering-by-date)
       - [comparing arrays](#comparing-arrays)
+        - [array query operators](#array-query-operators)
       - [comparing objects](#comparing-objects)
       - [comparing floating points and integers](#comparing-floating-points-and-integers)
       - [$in and $nin](#in-and-nin)
@@ -595,7 +596,7 @@ db.flights.find({departureDate: { $gt: ISODate("2020-02-20")} })
 
 #### comparing arrays
 
->Arrays are the same if they have the same elements in the same order. So it has to exact match to be returned by the query.
+>By default arrays are the same if they have the same elements in the same order. So it has to exact match to be returned by the query.
 
 ```
 Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: ["engineering"]})
@@ -647,6 +648,99 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: "technica
 If you use `[]` then nothing will be returned.
 ```
 db.crew.find({skills: ["technical"]})
+```
+
+##### array query operators
+
+* $all: matches arrays that contain all the elements in a provided list, **regardless of the order**
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: {$all: ["management", "technical"]}})
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accb"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  },
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accc"),
+    name: 'Andrei Luca',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  }
+]
+```
+* $size: matches arrays where the size is equal to the given value
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: {$size: 2}})
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accb"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  },
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accc"),
+    name: 'Andrei Luca',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  }
+]
+```
+
+* $elemMatch: returns arrays where an element matches multiple conditions
+
+For example return all flights where in a crew is entry with "Gotthard Merz" and "hoursSlept" equal 6.
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.flights.find({crew: {$elemMatch: {name: "Gotthard Merz", hoursSlept: 6} }})
+[
+  {
+    _id: ObjectId("60fffedb66fa675f8e5f8869"),
+    type: 'Intercontinental',
+    delayed: false,
+    duration: 600,
+    departureDate: ISODate("2020-03-20T18:10:00.000Z"),
+    distanceKm: 6400,
+    departure: {
+      code: 'MUC',
+      city: 'Munich',
+      country: 'Germany',
+      runwayLength: 4000,
+      location: { type: 'Point', coordinates: [ 11.7, 48.3 ] }
+    },
+    destination: {
+      code: 'JFK',
+      city: 'New York',
+      country: 'USA',
+      runwayLength: 4423,
+      location: { type: 'Point', coordinates: [ -74, 40.7 ] }
+    },
+    aircraftCode: '00126a63-f342-4ccd-ba86-4a7beecf10c0',
+    crew: [
+      { name: 'Marcel Danzig', position: 'Captain', hoursSlept: 7 },
+      {
+        name: 'Gotthard Merz',
+        position: 'Attendant',
+        nationality: 'Germany',
+        hoursSlept: 6
+      },
+      {
+        name: 'Bastian Steyer',
+        position: 'Attendant',
+        nationality: 'Germany',
+        hoursSlept: 3
+      },
+      {
+        name: 'Isabell Jahnke',
+        position: 'Attendant',
+        nationality: 'Germany',
+        hoursSlept: 5
+      }
+    ]
+  }
+]
 ```
 
 #### comparing objects

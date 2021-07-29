@@ -805,7 +805,24 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: "manageme
 ]
 ```
 
-* $ elemMatch
+* $ elemMatch: display only the first element to match the projection condition
+
+For example show first element that matches the conditions:
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.flights.find({}, {crew: { $elemMatch: { hoursSlept: {$gt: 8}} }})
+[
+  { _id: ObjectId("60fffedb66fa675f8e5f886d") },
+  {
+    _id: ObjectId("60fffedb66fa675f8e5f8866"),
+    crew: [ { name: 'Adina Popescu', position: 'Attendant', hoursSlept: 9 } ]
+  },
+  { _id: ObjectId("60fffedb66fa675f8e5f8869") },
+  { _id: ObjectId("60fffedb66fa675f8e5f886a") },
+  { _id: ObjectId("60fffedb66fa675f8e5f886e") }
+]
+
+```
 
 #### comparing objects
 

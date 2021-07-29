@@ -781,6 +781,12 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.flights.find({crew: {$elemMa
 ]
 ```
 
+Another version can skip n elements and next return m elements:
+
+```
+db.flights.find({}, {crew: {$slice: [1,1]}})
+```
+
 * $
 * $ elemMatch
 

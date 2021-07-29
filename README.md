@@ -624,6 +624,31 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: ["technic
 ]
 ```
 
+>To create a condition where any of a array values is equal to the condition value use `find` without `[]`.
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: "technical"})
+[
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accb"),
+    name: 'Anna Smith',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  },
+  {
+    _id: ObjectId("61014b1c5b94f0bdbef0accc"),
+    name: 'Andrei Luca',
+    skills: [ 'technical', 'management' ],
+    address: { city: 'Bucharest', country: 'Romania' }
+  }
+]
+```
+
+If you use `[]` then nothing will be returned.
+```
+db.crew.find({skills: ["technical"]})
+```
+
 #### comparing objects
 
 > Similar like for arrays here also both objects have to be exactly the same to be returned by the query (keys/values/order of keys). The second query will return no data.

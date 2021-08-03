@@ -44,5 +44,14 @@ namespace AspNetCoreWebApiMongoDB.Controllers
             return NoContent();
         }
 
+
+        [HttpDelete()]
+        [Route("/{id}")]
+        public IActionResult Delete(string id)
+        {
+            this._crewService.Delete(id);
+            return NoContent();
+        }
+
     }
 }

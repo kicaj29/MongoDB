@@ -62,5 +62,15 @@ namespace AspNetCoreWebApiMongoDB.Services
             // https://www.mongodb.com/community/forums/t/facing-this-weird-issue-in-asp-net-core-3-0/5057/2
             this._crews.ReplaceOne(c => c.Id == id, c);
         }
+
+        public void Delete(string id)
+        {
+            // DeleteOne does not throw exception in case the object has not be found
+            var results = this._crews.DeleteOne(c => c.Id == id);
+            if (results.DeletedCount == 1)
+            {
+                Debug.WriteLine($"Delete object with id {id}");
+            }
+        }
     }
 }

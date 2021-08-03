@@ -40,5 +40,10 @@ namespace AspNetCoreWebApiMongoDB.Services
 
             return this._crews.Find(Builders<Crew>.Filter.Empty).ToList();
         }
+
+        public Crew GetCrew(string id)
+        {
+            return this._crews.Find(c => c.Id == id).FirstOrDefault();
+        }
     }
 }

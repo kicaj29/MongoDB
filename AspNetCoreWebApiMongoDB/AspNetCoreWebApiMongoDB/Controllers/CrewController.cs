@@ -21,5 +21,13 @@ namespace AspNetCoreWebApiMongoDB.Controllers
 
         [HttpGet]
         public ActionResult<List<Crew>> Get() => this._crewService.GetCrews();
+
+        [HttpGet]
+        [Route("{id}")]
+        public ActionResult<Crew> Get(string id)
+        {
+            return this._crewService.GetCrew(id);
+        }
+        
     }
 }

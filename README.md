@@ -80,6 +80,7 @@
   - [Delete statement](#delete-statement)
   - [Drop table/collection](#drop-tablecollection)
 - [Importing data](#importing-data)
+- [References/docs](#referencesdocs)
 
 # Basics
 ## MongoDB is document database type.
@@ -1688,3 +1689,6 @@ PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kic
 2021-07-27T14:44:21.125+0200    dropping: flightmgmt.crew
 2021-07-27T14:44:21.217+0200    4 document(s) imported successfully. 0 document(s) failed to import.
 ```
+
+# References/docs
+https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mongo-app?view=aspnetcore-5.0&tabs=visual-studio   

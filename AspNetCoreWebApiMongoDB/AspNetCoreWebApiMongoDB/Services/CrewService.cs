@@ -141,6 +141,9 @@ namespace AspNetCoreWebApiMongoDB.Services
 
             // it looks also that when we use File type as response in the endpoint the stream is automatically disposed
             // more info here: https://stackoverflow.com/questions/42238826/does-a-stream-get-disposed-when-returning-a-file-from-an-action
+            // and for asp.net core it is also handled:
+            // https://github.com/dotnet/aspnetcore/blob/main/src/Mvc/Mvc.Core/src/FileStreamResult.cs#L79
+            // https://github.com/dotnet/aspnetcore/blob/main/src/Mvc/Mvc.Core/src/Infrastructure/FileStreamResultExecutor.cs#L40
             GridFSDownloadStream gridFSStream = bucket.OpenDownloadStream(streamId);
 
             return gridFSStream;

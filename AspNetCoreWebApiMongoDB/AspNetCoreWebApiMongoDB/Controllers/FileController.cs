@@ -54,7 +54,7 @@ namespace AspNetCoreWebApiMongoDB.Controllers
                 contentType = "application/octet-stream";
             }
 
-            var file = File(this._crewService.DownloadFileUsingGridFSDownloadStream(fileName), contentType);
+            var file = File(this._crewService.DownloadFile(fileName), contentType);
             return file;
         }
     }

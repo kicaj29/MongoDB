@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace AspNetCoreWebApiMongoDB.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class CrewController : Controller
+    [Route("api/[controller]")]
+    public class CrewController : ControllerBase
     {
         private CrewService _crewService;
 
@@ -45,8 +45,7 @@ namespace AspNetCoreWebApiMongoDB.Controllers
         }
 
 
-        [HttpDelete()]
-        [Route("/{id}")]
+        [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
             this._crewService.Delete(id);

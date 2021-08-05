@@ -81,6 +81,7 @@
   - [Drop table/collection](#drop-tablecollection)
 - [Importing data](#importing-data)
 - [References/docs](#referencesdocs)
+- [AspNetCore and MongoDB](#aspnetcore-and-mongodb)
 
 # Basics
 ## MongoDB is document database type.
@@ -96,6 +97,14 @@ Advantages of document database type:
 
 ![001_CAP-mongo](images/001_CAP-mongo.png)
 
+* Consistency: Every read receives the most recent write or an error. **IT IS NOT CONSISTENCE BETWEEN DOCUMENTS RELATIONS BUT CONSISTENCY BETWEEN NODES!**
+* Availability: Every request receives a (non-error) response, without the guarantee that it contains the most recent write
+* Partition tolerance: The system continues to operate despite an arbitrary number of messages being dropped (or delayed) by the network between nodes
+
+When a network partition failure happens should we decide to:
+
+* Cancel the operation and thus decrease the availability but ensure consistency
+* Proceed with the operation and thus provide availability but risk inconsistency
 
 ## SQL Terms vs Mongo DB Terms
 
@@ -1692,3 +1701,8 @@ PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kic
 
 # References/docs
 https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mongo-app?view=aspnetcore-5.0&tabs=visual-studio   
+
+# AspNetCore and MongoDB
+
+[SourceCode](/AspNetCoreWebApiMongoDB)
+

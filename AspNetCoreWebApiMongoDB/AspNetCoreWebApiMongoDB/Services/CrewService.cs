@@ -1,8 +1,12 @@
 ﻿using AspNetCoreWebApiMongoDB.Models;
+using Microsoft.AspNetCore.Http;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.GridFS;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,11 +16,12 @@ namespace AspNetCoreWebApiMongoDB.Services
     {
         private readonly IMongoCollection<Crew> _crews;
         private readonly ProjectionDefinition<Crew> _projection;
+        private readonly IMongoDatabase _db;
 
         public CrewService(MongoConnectionString connString)
         {
             var client = new MongoClient(connString.ConnectionString);
-            var db = client.GetDatabase(connString.DatabaseName);
+            this._db = client.GetDatabase(connString.DatabaseName);
 
 
             // to select only part of the fields we have to define projection,
@@ -26,7 +31,7 @@ namespace AspNetCoreWebApiMongoDB.Services
                 .Include(c => c.CrewName)
                 .Include(c => c.Skills);
 
-            this._crews = db.GetCollection<Crew>("crew");
+            this._crews = this._db.GetCollection<Crew>("crew");
         }
 
         public List<Crew> GetCrews()
@@ -72,5 +77,75 @@ namespace AspNetCoreWebApiMongoDB.Services
                 Debug.WriteLine($"Delete object with id {id}");
             }
         }
+
+
+        private GridFSBucket GetFileStorageBucket(string fileName)
+        {
+            // chunk size means amount for bytes that will be read from a stream: https://github.com/mongodb/mongo-csharp-driver/blob/master/src/MongoDB.Driver.GridFS/GridFSBucket.cs#L488
+            // also it means size of chunk for storing the file in MongoDB, for example if we upload 30MB file and chunk is 1MB then 37 chunks will be created
+            // in MongoDB to store this one file
+            // so basically it is size for I/O operation
+            var bucket = new GridFSBucket(this._db, new GridFSBucketOptions
+            {
+                BucketName = Path.GetExtension(fileName).Replace(".", ""),
+                ChunkSizeBytes = 1048576, // 1MB
+                WriteConcern = WriteConcern.WMajority,
+                ReadPreference = ReadPreference.Secondary
+            });
+            return bucket;
+        }
+
+        public void SaveCrewFile(IFormFile formFile)
+        {
+            var bucket = this.GetFileStorageBucket(formFile.FileName);
+            using (var stream = formFile.OpenReadStream())
+            {
+                bucket.UploadFromStream(formFile.FileName, stream);
+            }
+        }
+
+        public Stream DownloadFile(string fileName)
+        {
+            var bucket = this.GetFileStorageBucket(fileName);
+
+            MemoryStream ms = new MemoryStream();
+            bucket.DownloadToStreamByName(fileName, ms);
+
+            // set stream position on 0 because by default it is set on the end of the stream!
+            // it means that we read all data before we send the response to the client!
+            ms.Position = 0;
+
+            return ms;
+
+        }
+
+        public Stream DownloadFileUsingGridFSDownloadStream(string fileName)
+        {
+            FilterDefinitionBuilder<GridFSFileInfo> builder = Builders<GridFSFileInfo>.Filter;
+            FilterDefinition<GridFSFileInfo> filter = builder.Eq(p => p.Filename, fileName);
+            var bucket = this.GetFileStorageBucket(fileName);
+
+            ObjectId streamId;
+            using (IAsyncCursor<GridFSFileInfo> cursor = bucket.Find(filter))
+            {
+                GridFSFileInfo info = cursor.SingleOrDefault();
+                if (info == null)
+                {
+                    return null;
+                }
+                streamId = info.Id;
+            }
+
+            // open stream should be used always for bigger files because then we can send data in chunks to the client
+            // and we avoid huge memory allocation on the service side
+
+            // it looks also that when we use File type as response in the endpoint the stream is automatically disposed
+            // more info here: https://stackoverflow.com/questions/42238826/does-a-stream-get-disposed-when-returning-a-file-from-an-action
+            GridFSDownloadStream gridFSStream = bucket.OpenDownloadStream(streamId);
+
+            return gridFSStream;
+        }
+
+
     }
 }

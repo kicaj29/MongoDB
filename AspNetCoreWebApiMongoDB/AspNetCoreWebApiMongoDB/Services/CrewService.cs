@@ -1,8 +1,10 @@
 ﻿using AspNetCoreWebApiMongoDB.Models;
 using Microsoft.AspNetCore.Http;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -104,6 +106,27 @@ namespace AspNetCoreWebApiMongoDB.Services
             }
         }
 
+        public void StoreNewFileVersion(IFormFile formFile, string version)
+        {
+            VersionedFileInfo versionedFileInfo = new VersionedFileInfo(formFile.FileName, version, formFile.ContentType, formFile.FileName, formFile.Length, DateTime.UtcNow);
+            BsonDocument metadata = BsonDocument.Parse(JsonConvert.SerializeObject(versionedFileInfo));
+
+            GridFSUploadOptions options = new GridFSUploadOptions()
+            {
+                Metadata = metadata,
+            };
+
+            var bucket = this.GetFileStorageBucket(formFile.FileName);
+
+            // every time a new entry is created in DB, with this approach there is no way to update existing file
+            // more in docs: https://docs.mongodb.com/manual/core/gridfs/
+            // "Do not use GridFS if you need to update the content of the entire file atomically.
+            // As an alternative you can store multiple versions of each file and specify the current version of
+            // the file in the metadata. You can update the metadata field that indicates "latest" status in an atomic
+            // update after uploading the new version of the file, and later remove previous versions if needed."
+            bucket.UploadFromStream(formFile.FileName, formFile.OpenReadStream(), options);
+        }
+
         public Stream DownloadFile(string fileName)
         {
             var bucket = this.GetFileStorageBucket(fileName);
@@ -149,6 +172,32 @@ namespace AspNetCoreWebApiMongoDB.Services
             return gridFSStream;
         }
 
+        public VersionedFile DownloadVersionedFile(string fileName, string version)
+        {
+            FilterDefinitionBuilder<GridFSFileInfo> builder = Builders<GridFSFileInfo>.Filter;
+            FilterDefinition<GridFSFileInfo> filter = builder.Eq(p => p.Filename, fileName)
+                            & builder.Eq($"metadata.{nameof(VersionedFileInfo.VersionName)}", version);
+
+            var bucket = this.GetFileStorageBucket(fileName);
+
+            ObjectId streamId;
+            using (IAsyncCursor<GridFSFileInfo> cursor = bucket.Find(filter))
+            {
+                // might throw exception: System.InvalidOperationException: Sequence contains more than one element
+                //GridFSFileInfo info = cursor.SingleOrDefault();
+                GridFSFileInfo info = cursor.FirstOrDefault();
+                if (info == null)
+                {
+                    return null;
+                }
+                streamId = info.Id;
+            }
+
+            GridFSDownloadStream gridFSStream = bucket.OpenDownloadStream(streamId);
+            VersionedFileInfo versionedFileInfo = BsonSerializer.Deserialize<VersionedFileInfo>(gridFSStream.FileInfo.Metadata);
+
+            return new VersionedFile(gridFSStream, versionedFileInfo);
+        }
 
     }
 }

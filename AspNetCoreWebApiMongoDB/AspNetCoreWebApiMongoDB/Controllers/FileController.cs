@@ -30,6 +30,13 @@ namespace AspNetCoreWebApiMongoDB.Controllers
             this._crewService.SaveCrewFile(file);
         }
 
+        [HttpPut("versioned/{version}")]
+        [DisableRequestSizeLimit]
+        public void UploadNewFileVersion(IFormFile formFile, string version)
+        {
+            this._crewService.StoreNewFileVersion(formFile, version);
+        }
+
         // https://codeburst.io/download-files-using-web-api-ae1d1025f0a9
         [HttpGet("{fileName}")]
         public async Task<ActionResult> DownloadFile(string fileName)
@@ -56,6 +63,14 @@ namespace AspNetCoreWebApiMongoDB.Controllers
 
             var file = File(this._crewService.DownloadFile(fileName), contentType);
             return file;
+        }
+
+        [HttpGet("open-stream-versioned/{fileName}/{version}")]
+        public async Task<ActionResult> DownloadFileOpenStreamVersionedFile(string fileName, string version)
+        {
+
+            var fileInfo = this._crewService.DownloadVersionedFile(fileName, version);
+            return File(fileInfo.Stream, fileInfo.FileInfo.ContentType, fileInfo.FileInfo.FileName);
         }
     }
 }

@@ -34,6 +34,7 @@ namespace AspNetCoreWebApiMongoDB.Controllers
             this._crewService.CreateCrew(c);
 
             // https://stackoverflow.com/questions/25045604/can-anyone-explain-createdatroute-to-me/25110700
+            // returns 201 and header like this "location: https://localhost:5001/61113c3db85f0697736d0078"
             return CreatedAtRoute("GetById", new { id = c.Id }, c);
         }
 

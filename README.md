@@ -81,6 +81,11 @@
   - [Drop table/collection](#drop-tablecollection)
 - [Importing data](#importing-data)
 - [References/docs](#referencesdocs)
+- [Oplog](#oplog)
+  - [Oplog stats](#oplog-stats)
+  - [replication info](#replication-info)
+  - [replication info on secondary nodes](#replication-info-on-secondary-nodes)
+  - [replication service status](#replication-service-status)
 - [AspNetCore and MongoDB](#aspnetcore-and-mongodb)
 
 # Basics
@@ -1701,6 +1706,181 @@ PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kic
 
 # References/docs
 https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mongo-app?view=aspnetcore-5.0&tabs=visual-studio   
+
+# Oplog
+
+Oplog is stored in `local` database. It is stored in primary and secondary nodes (here through replication).
+
+To read oplog entry run for example:
+
+
+```js
+Atlas atlas-mritki-shard-0 [primary] local> db.oplog.rs.findOne()
+{
+  lsid: {
+    id: UUID("174bef69-f4e0-44cd-9435-16349814a5fb"),
+    uid: Binary(Buffer.from("75daa8b7af2f2e90543e73aea858f671d0a5bff76ffef17d6554b092760712c1", "hex"), 0)
+  },
+  txnNumber: Long("1"),
+  op: 'i',
+  ns: 'flightmgmt.crew',
+  ui: UUID("a9e12c39-5e11-4a47-939e-5abb8486a441"),
+  o: {
+    _id: ObjectId("61113ba8b85f0697736d0077"),
+    name: 'MondayCrew',
+    skills: [],
+    address: { city: null, country: null }
+  },
+  ts: Timestamp(6, 1628519337),
+  t: Long("130"),
+  v: Long("2"),
+  wall: ISODate("2021-08-09T14:28:57.054Z"),
+  stmtId: 0,
+  prevOpTime: { ts: Timestamp(0, 0), t: Long("-1") }
+}
+```
+* `op` value is type of operation: i (insert), u (update), d (delete), n (no operation)
+* `ns` means namespace
+
+In case we create a collection:
+
+```
+Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.mytbl.insert({"name": "test", age: 10})
+DeprecationWarning: Collection.insert() is deprecated. Use insertOne, insertMany, or bulkWrite.
+{
+  acknowledged: true,
+  insertedIds: { '0': ObjectId("6112cb1725a995e781f0cdb4") }
+}
+```
+
+next we can find oplog entry for this operation:
+
+```js
+Atlas atlas-mritki-shard-0 [primary] local> db.oplog.rs.find({"o.create": "mytbl"})
+[
+  {
+    op: 'c',
+    ns: 'flightmgmt.$cmd',
+    ui: UUID("12707f7e-d372-45ad-80aa-c1aa941b5066"),
+    o: {
+      create: 'mytbl',
+      idIndex: { v: 2, key: { _id: 1 }, name: '_id_' }
+    },
+    ts: Timestamp(11, 1628621591),
+    t: Long("131"),
+    v: Long("2"),
+    wall: ISODate("2021-08-10T18:53:11.097Z")
+  }
+]
+```
+
+>NOTE: it looks that in oplog we do not store `_id` value!
+
+## Oplog stats
+
+```js
+Atlas atlas-mritki-shard-0 [primary] local> db.oplog.rs.stats()
+{
+  ns: 'local.oplog.rs',
+  size: 8174213871,
+  count: 11520420,
+  avgObjSize: 709,
+  storageSize: 2541527040,
+  freeStorageSize: 1045405696,
+  capped: true,
+  max: -1,
+  maxSize: Long("8246187008"),
+  sleepCount: 0,
+  sleepMS: 0,
+  nindexes: 0,
+  indexBuilds: [],
+  totalIndexSize: 0,
+  totalSize: 2541527040,
+  indexSizes: {},
+  scaleFactor: 1,
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp(126, 1628622879),
+    signature: {
+      hash: Binary(Buffer.from("f1bbe9d4c7092668d2a3b344a836fbd4d1855716", "hex"), 0),
+      keyId: Long("6961452270902837249")
+    }
+  },
+  operationTime: Timestamp(126, 1628622879)
+}
+```
+
+## replication info
+
+```js
+Atlas atlas-mritki-shard-0 [primary] local> rs.printReplicationInfo()
+configured oplog size
+'8179550531 MB'
+---
+log length start to end
+'102254 secs (28.4 hrs)'
+---
+oplog first event time
+'Mon Aug 09 2021 16:28:57 GMT+0200 (czas środkowoeuropejski letni)'
+---
+oplog last event time
+'Tue Aug 10 2021 20:53:11 GMT+0200 (czas środkowoeuropejski letni)'
+---
+now
+'Tue Aug 10 2021 21:16:16 GMT+0200 (czas środkowoeuropejski letni)'
+```
+
+## replication info on secondary nodes
+
+>"Prints a formatted report of the replica set status from the perspective of the secondary member of the set. The output is identical to db.printSecondaryReplicationInfo()."
+
+[Docs](https://docs.mongodb.com/manual/reference/method/rs.printSecondaryReplicationInfo/).
+
+It did not work:
+
+```js
+Atlas atlas-mritki-shard-0 [primary] local> rs.printSecondaryReplicationInfo()
+MongoServerError: namespace not found
+Atlas atlas-mritki-shard-0 [primary] local> db.printSecondaryReplicationInfo()
+MongoServerError: namespace not found
+```
+
+## replication service status
+
+```js
+Atlas atlas-mritki-shard-0 [primary] local> db.serverStatus().repl
+{
+  topologyVersion: {
+    processId: ObjectId("6112a55c923882e9a084c983"),
+    counter: Long("6")
+  },
+  hosts: [
+    'myfirstcluster-shard-00-00.a6uds.mongodb.net:27017',
+    'myfirstcluster-shard-00-01.a6uds.mongodb.net:27017',
+    'myfirstcluster-shard-00-02.a6uds.mongodb.net:27017'
+  ],
+  setName: 'atlas-mritki-shard-0',
+  setVersion: 7,
+  ismaster: true,
+  secondary: false,
+  primary: 'myfirstcluster-shard-00-01.a6uds.mongodb.net:27017',
+  tags: {
+    provider: 'AWS',
+    nodeType: 'ELECTABLE',
+    region: 'EU_CENTRAL_1',
+    workloadType: 'OPERATIONAL'
+  },
+  me: 'myfirstcluster-shard-00-01.a6uds.mongodb.net:27017',
+  electionId: ObjectId("7fffffff0000000000000083"),
+  lastWrite: {
+    opTime: { ts: Timestamp(26, 1628623553), t: Long("131") },
+    lastWriteDate: ISODate("2021-08-10T19:25:53.000Z"),
+    majorityOpTime: { ts: Timestamp(26, 1628623553), t: Long("131") },
+    majorityWriteDate: ISODate("2021-08-10T19:25:53.000Z")
+  },
+  rbid: 1
+}
+```
 
 # AspNetCore and MongoDB
 

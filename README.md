@@ -86,6 +86,7 @@
   - [replication info](#replication-info)
   - [replication info on secondary nodes](#replication-info-on-secondary-nodes)
   - [replication service status](#replication-service-status)
+- [Backend and restore](#backend-and-restore)
 - [AspNetCore and MongoDB](#aspnetcore-and-mongodb)
 
 # Basics
@@ -1881,6 +1882,16 @@ Atlas atlas-mritki-shard-0 [primary] local> db.serverStatus().repl
   rbid: 1
 }
 ```
+
+# Backend and restore
+
+* Backup
+In case of local mongodb database just run `mongodump` and it will create `dump` folder in the current folder.
+By default it will connect to local mongo db that works on url: `mongodb://localhost:27017`.
+
+* Restore
+To restore db in local instance of mongodb that runs on default port run: `mongorestore dump`. The `dump` folder is the same folder that was created by `mongodump`. NOTE: this folder contains also `admin` folder and it looks that this folder is mandatory to execute restore because when I moved this folder to antoher location then the dum did not work.
+
 
 # AspNetCore and MongoDB
 

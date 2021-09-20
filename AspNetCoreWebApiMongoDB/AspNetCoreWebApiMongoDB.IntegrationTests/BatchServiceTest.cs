@@ -39,7 +39,7 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
 
             var batchProcessing = new Batch();
             batchProcessing = new Batch();
-            batchProcessing.Name = "Batch ready to process";
+            batchProcessing.Name = "Batch processing";
             batchProcessing.State = BatchState.Processing;
             batchProcessing.Suspension = BatchSuspension.None;
 
@@ -50,6 +50,7 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             batchInVerification.Concurrency = new Concurrency() { UserName = "kicaj29" };
 
             batches.InsertMany(new List<Batch>(new Batch[] { batchReadyToProcess, batchProcessing, batchInVerification }));
+
             this._batchReadyToProcessId = batchReadyToProcess.Id;
             this._batchProcessingId = batchProcessing.Id;
             this._batchInVerificationId = batchInVerification.Id;
@@ -67,6 +68,12 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
         public void TestMultipleUpdates()
         {
             var batchService = new BatchService(this._mongoConnectionString);
+
+            var result = batchService.UpdateMultipleBatches(
+                new List<string>(new string[] { this._batchInVerificationId, this._batchProcessingId, this._batchReadyToProcessId })
+                );
+
+            Assert.AreEqual(2, result.Count);
         }
     }
 }

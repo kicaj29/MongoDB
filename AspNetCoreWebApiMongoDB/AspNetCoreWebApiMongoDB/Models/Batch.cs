@@ -22,6 +22,8 @@ namespace AspNetCoreWebApiMongoDB.Models
 
         public BatchSuspension Suspension { get; set; }
 
+        public Concurrency Concurrency { get; set; }
+
     }
 
     [JsonConverter(typeof(StringEnumConverter))]
@@ -45,4 +47,10 @@ namespace AspNetCoreWebApiMongoDB.Models
         Suspending = 1,
         Suspended = 2
     }
+
+    public class Concurrency
+    {
+        public string UserName { get; set; }
+    }
+
 }

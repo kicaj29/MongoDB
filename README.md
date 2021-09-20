@@ -61,6 +61,7 @@
         - [Using `upsert`](#using-upsert)
       - [Specify write concern](#specify-write-concern)
     - [Replace command](#replace-command)
+    - [Updating multiple records](#updating-multiple-records)
   - [Delete](#delete)
     - [Delete in MongoDB Compass](#delete-in-mongodb-compass)
     - [Delete in command line](#delete-in-command-line)
@@ -86,7 +87,7 @@
   - [replication info](#replication-info)
   - [replication info on secondary nodes](#replication-info-on-secondary-nodes)
   - [replication service status](#replication-service-status)
-- [Backend and restore](#backend-and-restore)
+- [Backup and restore](#backup-and-restore)
 - [AspNetCore and MongoDB](#aspnetcore-and-mongodb)
 
 # Basics
@@ -1437,6 +1438,14 @@ Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 112
 ]
 ```
 
+### Updating multiple records
+
+>NOTE: this section is coded using integration tests. To run this test you have to select [.runsettings](/AspNetCoreWebApiMongoDB/AspNetCoreWebApiMongoDB.IntegrationTests/.runsettings) file.
+
+
+![041_vs_test_runsettings.png](images/041_vs_test_runsettings.png)
+
+
 ## Delete
 
 * all write operations in MongoDB are atomic on the level of single document
@@ -1883,7 +1892,7 @@ Atlas atlas-mritki-shard-0 [primary] local> db.serverStatus().repl
 }
 ```
 
-# Backend and restore
+# Backup and restore
 
 * Backup
 In case of local mongodb database just run `mongodump` and it will create `dump` folder in the current folder.

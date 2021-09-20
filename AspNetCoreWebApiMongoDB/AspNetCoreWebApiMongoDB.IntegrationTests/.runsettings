@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+
+  <!-- Parameters used by tests at runtime -->
+  <TestRunParameters>
+    <Parameter name="mongoConnectionString" value="mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" />
+	<Parameter name="databaseName" value="BatchesDB" />
+  </TestRunParameters>
+
+</RunSettings>

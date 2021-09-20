@@ -61,7 +61,7 @@
         - [Using `upsert`](#using-upsert)
       - [Specify write concern](#specify-write-concern)
     - [Replace command](#replace-command)
-    - [Updating multiple records in C](#updating-multiple-records-in-c)
+    - [Updating multiple records in C-Sharp](#updating-multiple-records-in-c-sharp)
   - [Delete](#delete)
     - [Delete in MongoDB Compass](#delete-in-mongodb-compass)
     - [Delete in command line](#delete-in-command-line)
@@ -1438,7 +1438,7 @@ Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: 112
 ]
 ```
 
-### Updating multiple records in C#
+### Updating multiple records in C-Sharp
 
 >NOTE: this section is coded using integration tests. To run this test you have to select [.runsettings](/AspNetCoreWebApiMongoDB/AspNetCoreWebApiMongoDB.IntegrationTests/.runsettings) file.
 

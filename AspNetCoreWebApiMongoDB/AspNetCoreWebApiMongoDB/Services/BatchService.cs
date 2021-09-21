@@ -51,7 +51,13 @@ namespace AspNetCoreWebApiMongoDB.Services
             }
 
             return result;
+        }
 
+        public Batch FindOneAndDelete(string id)
+        {
+            IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
+
+            return batches.FindOneAndDelete(Builders<Batch>.Filter.Where(b => b.Id == id));
         }
     }
 

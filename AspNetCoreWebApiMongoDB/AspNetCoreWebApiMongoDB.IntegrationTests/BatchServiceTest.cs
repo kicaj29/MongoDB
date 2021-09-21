@@ -86,5 +86,16 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
 
             Assert.AreEqual(0, result.Count(r => r.Id == _batchInVerificationIdConcurrencySet));
         }
+
+        [Test]
+        public void TestFindOneAndDelete()
+        {
+            var batchService = new BatchService(this._mongoConnectionString);
+            var result1 = batchService.FindOneAndDelete(this._batchProcessingId);
+            var result2 = batchService.FindOneAndDelete(this._batchProcessingId);
+
+            Assert.AreEqual(this._batchProcessingId, result1.Id);
+            Assert.IsNull(result2);
+        }
     }
 }

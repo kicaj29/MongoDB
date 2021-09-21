@@ -35,5 +35,20 @@ namespace AspNetCoreWebApiMongoDB.Controllers
             })
             .ToArray();
         }
+
+        [HttpGet("/test-dict")]
+        public Dictionary<string, int> TestDictionaryResult()
+        {
+            var result = new Dictionary<string, int>()
+            {
+                { "AAA", 0 }
+            };
+
+            result.Add(Guid.NewGuid().ToString(), 1);
+            result.Add(Guid.NewGuid().ToString(), 2);
+            result.Add(Guid.NewGuid().ToString(), 3);
+
+            return result;
+        }
     }
 }

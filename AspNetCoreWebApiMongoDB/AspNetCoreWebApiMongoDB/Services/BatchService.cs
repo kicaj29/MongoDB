@@ -27,7 +27,7 @@ namespace AspNetCoreWebApiMongoDB.Services
             IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
 
             var filter = Builders<Batch>.Filter
-                .Where(b => ids.Contains(b.Id) && b.State != BatchState.Verification && b.Suspension == BatchSuspension.None);
+                .Where(b => ids.Contains(b.Id) && b.Suspension == BatchSuspension.None && b.Concurrency == null);
 
 
             var update = Builders<Batch>.Update

@@ -32,12 +32,17 @@ namespace AspNetCoreWebApiMongoDB
             services.AddSingleton<MongoConnectionString>(c => c.GetRequiredService<IOptions<MongoConnectionString>>().Value);
             services.AddSingleton<CrewService>();
 
-            services.AddControllers();
+            services.AddControllers()
+                    .AddJsonOptions(options =>
+                    {
+                        // thx to this Enums are handled as strings in REST API
+                        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                    });
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "AspNetCoreWebApiMongoDB", Version = "v1" });
-            });            
-
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

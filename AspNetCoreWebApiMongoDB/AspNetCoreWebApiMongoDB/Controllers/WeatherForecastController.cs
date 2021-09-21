@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,5 +52,47 @@ namespace AspNetCoreWebApiMongoDB.Controllers
 
             return result;
         }
+
+
+        [HttpGet("/temp-schema")]
+        public MultipleBatchesDeleteResult TempSchema()
+        {
+            var result = new MultipleBatchesDeleteResult();
+
+
+            result.Add(Guid.NewGuid().ToString(), BatchDeleteResult.Deleted);
+            result.Add(Guid.NewGuid().ToString(), BatchDeleteResult.Suspending);
+            result.Add(Guid.NewGuid().ToString(), BatchDeleteResult.RejectedBecauseOfLock);
+
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class MultipleBatchesDeleteResult : Dictionary<string, BatchDeleteResult>
+    {
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum BatchDeleteResult
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        Suspending = 0,
+        /// <summary>
+        /// 
+        /// </summary>
+        Deleted = 1,
+        /// <summary>
+        /// 
+        /// </summary>
+        RejectedBecauseOfLock = 2
     }
 }

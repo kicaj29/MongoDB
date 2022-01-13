@@ -1,9 +1,13 @@
 using AspNetCoreWebApiMongoDB.Models;
+using AspNetCoreWebApiMongoDB.Serializers;
 using AspNetCoreWebApiMongoDB.Services;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AspNetCoreWebApiMongoDB.IntegrationTests
 {
@@ -15,7 +19,7 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
         private string _batchInVerificationIdConcurrencySet;
         private string _batchInVerificationIdConcurrencyNull;
 
-        [OneTimeSetUp]
+        // [OneTimeSetUp]
         public void OneTimeSetUp()
         {
             var connString = TestContext.Parameters.Get("mongoConnectionString");
@@ -35,23 +39,23 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
 
             var batchReadyToProcess = new Batch();
             batchReadyToProcess.Name = "Batch ready to process";
-            batchReadyToProcess.State = BatchState.ReadyToProcess;
+            //batchReadyToProcess.State = BatchState.ReadyToProcess;
             batchReadyToProcess.Suspension = BatchSuspension.None;
 
             var batchProcessing = new Batch();
             batchProcessing.Name = "Batch processing";
-            batchProcessing.State = BatchState.Processing;
+            //batchProcessing.State = BatchState.Processing;
             batchProcessing.Suspension = BatchSuspension.None;
 
             var batchInVerificationConcurrencySet = new Batch();
             batchInVerificationConcurrencySet.Name = "Batch in verification concurrency set";
-            batchInVerificationConcurrencySet.State = BatchState.Verification;
+            //batchInVerificationConcurrencySet.State = BatchState.Verification;
             batchInVerificationConcurrencySet.Concurrency = new Concurrency() { UserName = "kicaj29" };
 
 
             var batchInVerificationConcurrencyNull = new Batch();
             batchInVerificationConcurrencyNull.Name = "Batch in verification concurrency null";
-            batchInVerificationConcurrencyNull.State = BatchState.Verification;
+            // batchInVerificationConcurrencyNull.State = BatchState.Verification;
             batchInVerificationConcurrencyNull.Concurrency = null;
 
             batches.InsertMany(new List<Batch>(new Batch[] { batchReadyToProcess, batchProcessing, batchInVerificationConcurrencySet, batchInVerificationConcurrencyNull }));
@@ -67,7 +71,13 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
         [SetUp]
         public void Setup()
         {
-
+            var connString = TestContext.Parameters.Get("mongoConnectionString");
+            var databaseName = TestContext.Parameters.Get("databaseName");
+            this._mongoConnectionString = new MongoConnectionString()
+            {
+                ConnectionString = connString,
+                DatabaseName = databaseName
+            };
         }
 
         [Test]
@@ -96,6 +106,27 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
 
             Assert.AreEqual(this._batchProcessingId, result1.Id);
             Assert.IsNull(result2);
+        }
+
+        [Test]
+        public async Task TestCustomSerializationAsync()
+        {
+            try
+            {
+
+                BsonClassMap.RegisterClassMap<Batch>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.MapMember(c => c.State).SetSerializer(new BatchStateV1Serializer());
+                });
+
+                var batchService = new BatchService(this._mongoConnectionString);
+                var batch = await batchService.FindBatchAsync("61dd5679194033ea83d88b73");
+            }
+            catch(Exception ex)
+            {
+
+            }
         }
     }
 }

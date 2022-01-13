@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using AspNetCoreWebApiMongoDB.Serializers;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -18,7 +19,10 @@ namespace AspNetCoreWebApiMongoDB.Models
         [BsonElement("name")]
         public string Name { get; set; }
 
-        public BatchState State { get; set; }
+        //[BsonSerializer(typeof(BatchStateV1Serializer))]
+        public BatchStateV1 State { get; set; }
+
+        //public BatchState State { get; set; }
 
         public BatchSuspension Suspension { get; set; }
 
@@ -38,6 +42,17 @@ namespace AspNetCoreWebApiMongoDB.Models
         ReadyForExport = 6,
         Exported = 100,
         Complete = 101
+    }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum BatchStateV1
+    {
+        Unknown = 0,
+        Created = 1,
+        ReadyToProcess = 2,
+        Processing = 3,
+        Complete = 101,
+        Deleted = 9999
     }
 
     [JsonConverter(typeof(StringEnumConverter))]

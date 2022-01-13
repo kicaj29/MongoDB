@@ -3,7 +3,8 @@
 
   <!-- Parameters used by tests at runtime -->
   <TestRunParameters>
-    <Parameter name="mongoConnectionString" value="mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" />
+    <!--<Parameter name="mongoConnectionString" value="mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" />-->
+    <Parameter name="mongoConnectionString" value="mongodb://localhost:27017" />
 	<Parameter name="databaseName" value="BatchesDB" />
   </TestRunParameters>
 

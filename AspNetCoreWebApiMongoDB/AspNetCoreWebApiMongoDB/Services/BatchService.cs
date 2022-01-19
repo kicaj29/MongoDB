@@ -68,6 +68,81 @@ namespace AspNetCoreWebApiMongoDB.Services
                 return await cursor.FirstOrDefaultAsync();
             }
         }
+
+        private void SimpleLinq()
+        {
+
+            // this is just pure linq in c#
+            Batch b = new Batch();
+            b.Id = "batch1";
+            b.DocumentIDs = new List<string>(new string[] { "1" });
+
+            Document d = new Document();
+            d.ID = "1";
+
+            List<Batch> batches = new List<Batch>(new Batch[] { b } );
+            List<Document> documents = new List<Document>(new Document[] { d });
+
+            var batchesQuerable = batches.AsQueryable();
+            var documentsQuerable = documents.AsQueryable();
+
+            var query = documentsQuerable.Where(d => batchesQuerable.Where(b => b.Id == "batch1" && b.DocumentIDs.Contains(d.ID)).Any());
+            List<Document> docs = query.ToList();
+
+        }
+
+        private void SimpleAggregation()
+        {
+            // https://www.youtube.com/watch?v=P0vDBxlFA-k
+            IMongoCollection<Country> countries = this._db.GetCollection<Country>("countries");
+            IMongoCollection<Province> provinces = this._db.GetCollection<Province>("provinces");
+
+            var result = countries.Aggregate()
+                .Lookup<Country, Province, CountryLookedUp>(provinces, c => c.CountryId,
+                    p => p.ProvinceId, c => c.ProvinceList)
+                .ToList();
+        }
+
+        private void SimpleAggregationV2()
+        {
+            // https://www.youtube.com/watch?v=P0vDBxlFA-k
+            IMongoCollection<Country> countries = this._db.GetCollection<Country>("countries");
+            IMongoCollection<Province> provinces = this._db.GetCollection<Province>("provinces");
+
+            var result = countries.Aggregate()
+                .Lookup<Country, Province, CountryLookedUp>(provinces, c => c.CountryId,
+                    p => p.ProvinceId, lu => lu.ProvinceList)
+                .ToEnumerable()
+                .SelectMany(lu => lu.ProvinceList.Select(
+                    p => new
+                    {
+                        p.Name
+                    }
+                    )
+                )
+                .ToList();
+        }
+
+        public void RunAggregation()
+        {
+            this.SimpleLinq();
+            this.SimpleAggregation();
+            this.SimpleAggregationV2();
+
+            IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
+            IMongoCollection<Document> documents = this._db.GetCollection<Document>("documents");
+
+            var batchesQuerable = batches.AsQueryable();
+            var documentsQuerable = documents.AsQueryable();
+
+
+
+            var query = documentsQuerable.Where(d => batchesQuerable.Where(b => b.Id == "61e82ed943389ffc5d277055" && b.DocumentIDs.Contains(d.ID)).Any());
+            List<Document> docs = query.ToList();
+
+
+
+        }
     }
 
     public class UpdateResultForId

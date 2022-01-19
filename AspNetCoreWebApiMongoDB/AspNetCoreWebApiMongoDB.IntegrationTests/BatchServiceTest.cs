@@ -19,9 +19,37 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
         private string _batchInVerificationIdConcurrencySet;
         private string _batchInVerificationIdConcurrencyNull;
 
+        private void CreateCountriesAndProvincies(MongoClient client)
+        {
+            Country c1 = new Country()
+            {
+                CountryId = "1",
+                CountryName = "Poland"
+            };
+            Country c2 = new Country()
+            {
+                CountryId = "2",
+                CountryName = "USA"
+            };
+
+            Province p1 = new Province();
+            p1.CountryId = "1";
+            p1.Name = "Silesia";
+            p1.ProvinceId = "1";
+
+            IMongoDatabase db = client.GetDatabase(this._mongoConnectionString.DatabaseName);
+            IMongoCollection<Country> countries = db.GetCollection<Country>("countries");
+            IMongoCollection<Province> provinces = db.GetCollection<Province>("provinces");
+
+            countries.InsertMany(new List<Country>(new Country[] { c1, c2 }));
+            provinces.InsertMany(new List<Province>(new Province[] { p1 }));
+        }
+
         // [OneTimeSetUp]
         public void OneTimeSetUp()
         {
+
+
             var connString = TestContext.Parameters.Get("mongoConnectionString");
             var databaseName = TestContext.Parameters.Get("databaseName");
             this._mongoConnectionString = new MongoConnectionString()
@@ -32,8 +60,12 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
 
             //generate sample data
             var client = new MongoClient(this._mongoConnectionString.ConnectionString);
+
+            this.CreateCountriesAndProvincies(client);
+
             IMongoDatabase db = client.GetDatabase(this._mongoConnectionString.DatabaseName);
             IMongoCollection<Batch> batches = db.GetCollection<Batch>("batches");
+            IMongoCollection<Document> documents = db.GetCollection<Document>("documents");
 
             batches.DeleteMany(Builders<Batch>.Filter.Empty);
 
@@ -41,6 +73,17 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             batchReadyToProcess.Name = "Batch ready to process";
             //batchReadyToProcess.State = BatchState.ReadyToProcess;
             batchReadyToProcess.Suspension = BatchSuspension.None;
+            batchReadyToProcess.DocumentIDs = new List<string>();
+
+            var doc1 = new Document();
+            doc1.ID = Guid.NewGuid().ToString();
+            doc1.DocumentStatus = new DocumentStatus()
+            {
+                ActionId = "1",
+                ActionType = "Type1",
+                Status = "Status1"
+            };
+            batchReadyToProcess.DocumentIDs.Add(doc1.ID);
 
             var batchProcessing = new Batch();
             batchProcessing.Name = "Batch processing";
@@ -64,6 +107,8 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             this._batchProcessingId = batchProcessing.Id;
             this._batchInVerificationIdConcurrencySet = batchInVerificationConcurrencySet.Id;
             this._batchInVerificationIdConcurrencyNull = batchInVerificationConcurrencyNull.Id;
+
+            documents.InsertMany(new List<Document>(new Document[] { doc1 }));
         }
 
 
@@ -127,6 +172,13 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             {
 
             }
+        }
+
+        [Test]
+        public void TestMongoAggregation()
+        {
+            var batchService = new BatchService(this._mongoConnectionString);
+            batchService.RunAggregation();
         }
     }
 }

@@ -28,6 +28,8 @@ namespace AspNetCoreWebApiMongoDB.Models
 
         public Concurrency Concurrency { get; set; }
 
+        public List<string> DocumentIDs { get; set; }
+
     }
 
     [JsonConverter(typeof(StringEnumConverter))]

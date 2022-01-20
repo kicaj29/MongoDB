@@ -12,9 +12,9 @@ namespace AspNetCoreWebApiMongoDB.Models
 {
     public class Batch
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        //[BsonId]
+        //[BsonRepresentation(BsonType.ObjectId)]
+        public string ID { get; set; }
 
         [BsonElement("name")]
         public string Name { get; set; }

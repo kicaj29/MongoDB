@@ -70,6 +70,7 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             batches.DeleteMany(Builders<Batch>.Filter.Empty);
 
             var batchReadyToProcess = new Batch();
+            batchReadyToProcess.ID = Guid.NewGuid().ToString();
             batchReadyToProcess.Name = "Batch ready to process";
             //batchReadyToProcess.State = BatchState.ReadyToProcess;
             batchReadyToProcess.Suspension = BatchSuspension.None;
@@ -83,32 +84,53 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
                 ActionType = "Type1",
                 Status = "Status1"
             };
+            var doc2 = new Document();
+            doc2.ID = Guid.NewGuid().ToString();
+            doc2.DocumentStatus = new DocumentStatus()
+            {
+                ActionId = "2",
+                ActionType = "Type2",
+                Status = "Status2"
+            };
             batchReadyToProcess.DocumentIDs.Add(doc1.ID);
+            batchReadyToProcess.DocumentIDs.Add(doc2.ID);
 
             var batchProcessing = new Batch();
+            batchProcessing.ID = Guid.NewGuid().ToString();
             batchProcessing.Name = "Batch processing";
             //batchProcessing.State = BatchState.Processing;
             batchProcessing.Suspension = BatchSuspension.None;
 
             var batchInVerificationConcurrencySet = new Batch();
+            batchInVerificationConcurrencySet.ID = Guid.NewGuid().ToString();
             batchInVerificationConcurrencySet.Name = "Batch in verification concurrency set";
             //batchInVerificationConcurrencySet.State = BatchState.Verification;
             batchInVerificationConcurrencySet.Concurrency = new Concurrency() { UserName = "kicaj29" };
-
+            var doc3 = new Document();
+            doc3.ID = Guid.NewGuid().ToString();
+            doc3.DocumentStatus = new DocumentStatus()
+            {
+                ActionId = "3",
+                ActionType = "Type3",
+                Status = "Status3"
+            };
+            batchInVerificationConcurrencySet.DocumentIDs = new List<string>();
+            batchInVerificationConcurrencySet.DocumentIDs.Add(doc3.ID);
 
             var batchInVerificationConcurrencyNull = new Batch();
+            batchInVerificationConcurrencyNull.ID = Guid.NewGuid().ToString();
             batchInVerificationConcurrencyNull.Name = "Batch in verification concurrency null";
             // batchInVerificationConcurrencyNull.State = BatchState.Verification;
             batchInVerificationConcurrencyNull.Concurrency = null;
 
             batches.InsertMany(new List<Batch>(new Batch[] { batchReadyToProcess, batchProcessing, batchInVerificationConcurrencySet, batchInVerificationConcurrencyNull }));
 
-            this._batchReadyToProcessId = batchReadyToProcess.Id;
-            this._batchProcessingId = batchProcessing.Id;
-            this._batchInVerificationIdConcurrencySet = batchInVerificationConcurrencySet.Id;
-            this._batchInVerificationIdConcurrencyNull = batchInVerificationConcurrencyNull.Id;
+            this._batchReadyToProcessId = batchReadyToProcess.ID;
+            this._batchProcessingId = batchProcessing.ID;
+            this._batchInVerificationIdConcurrencySet = batchInVerificationConcurrencySet.ID;
+            this._batchInVerificationIdConcurrencyNull = batchInVerificationConcurrencyNull.ID;
 
-            documents.InsertMany(new List<Document>(new Document[] { doc1 }));
+            documents.InsertMany(new List<Document>(new Document[] { doc1, doc2, doc3 }));
         }
 
 
@@ -149,7 +171,7 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             var result1 = batchService.FindOneAndDelete(this._batchProcessingId);
             var result2 = batchService.FindOneAndDelete(this._batchProcessingId);
 
-            Assert.AreEqual(this._batchProcessingId, result1.Id);
+            Assert.AreEqual(this._batchProcessingId, result1.ID);
             Assert.IsNull(result2);
         }
 

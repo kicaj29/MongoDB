@@ -1,4 +1,6 @@
 ﻿using AspNetCoreWebApiMongoDB.Models;
+using AspNetCoreWebApiMongoDB.Models.AggregationTempModels;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
@@ -27,7 +29,7 @@ namespace AspNetCoreWebApiMongoDB.Services
             IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
 
             var filter = Builders<Batch>.Filter
-                .Where(b => ids.Contains(b.Id) && b.Suspension == BatchSuspension.None && b.Concurrency == null);
+                .Where(b => ids.Contains(b.ID) && b.Suspension == BatchSuspension.None && b.Concurrency == null);
 
 
             var update = Builders<Batch>.Update
@@ -36,7 +38,7 @@ namespace AspNetCoreWebApiMongoDB.Services
             batches.UpdateMany(filter, update);
 
             var filterForCheck = Builders<Batch>.Filter
-                .Where(b => ids.Contains(b.Id) && b.Suspension == BatchSuspension.Suspending);
+                .Where(b => ids.Contains(b.ID) && b.Suspension == BatchSuspension.Suspending);
 
 
             var updatedBatches = batches.Find(filterForCheck).ToList();
@@ -45,7 +47,7 @@ namespace AspNetCoreWebApiMongoDB.Services
             {
                 result.Add(new UpdateResultForId()
                 {
-                    Id = b.Id,
+                    Id = b.ID,
                     Result = UpdateResult.Suspending
                 });
             }
@@ -57,13 +59,13 @@ namespace AspNetCoreWebApiMongoDB.Services
         {
             IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
 
-            return batches.FindOneAndDelete(Builders<Batch>.Filter.Where(b => b.Id == id));
+            return batches.FindOneAndDelete(Builders<Batch>.Filter.Where(b => b.ID == id));
         }
 
         public async Task<Batch> FindBatchAsync(string id)
         {
             IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
-            using (var cursor = await batches.FindAsync(Builders<Batch>.Filter.Where(b => b.Id == id), new FindOptions<Batch>() { Limit = 1 }))
+            using (var cursor = await batches.FindAsync(Builders<Batch>.Filter.Where(b => b.ID == id), new FindOptions<Batch>() { Limit = 1 }))
             {
                 return await cursor.FirstOrDefaultAsync();
             }
@@ -74,7 +76,7 @@ namespace AspNetCoreWebApiMongoDB.Services
 
             // this is just pure linq in c#
             Batch b = new Batch();
-            b.Id = "batch1";
+            b.ID = "batch1";
             b.DocumentIDs = new List<string>(new string[] { "1" });
 
             Document d = new Document();
@@ -86,7 +88,7 @@ namespace AspNetCoreWebApiMongoDB.Services
             var batchesQuerable = batches.AsQueryable();
             var documentsQuerable = documents.AsQueryable();
 
-            var query = documentsQuerable.Where(d => batchesQuerable.Where(b => b.Id == "batch1" && b.DocumentIDs.Contains(d.ID)).Any());
+            var query = documentsQuerable.Where(d => batchesQuerable.Where(b => b.ID == "batch1" && b.DocumentIDs.Contains(d.ID)).Any());
             List<Document> docs = query.ToList();
 
         }
@@ -125,23 +127,47 @@ namespace AspNetCoreWebApiMongoDB.Services
 
         public void RunAggregation()
         {
-            this.SimpleLinq();
-            this.SimpleAggregation();
-            this.SimpleAggregationV2();
+            //this.SimpleLinq();
+            //this.SimpleAggregation();
+            //this.SimpleAggregationV2();
 
             IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
             IMongoCollection<Document> documents = this._db.GetCollection<Document>("documents");
 
-            var batchesQuerable = batches.AsQueryable();
-            var documentsQuerable = documents.AsQueryable();
+            // we can create projection here or in-line in the aggregate
+            ProjectionDefinition<BsonDocument, TempDocument> projection1 = Builders<BsonDocument>.Projection.Expression(bsonDoc =>
+                    new TempDocument
+                    {
+                        DocumentId = bsonDoc.GetValue("DocumentIDs").AsString
+                    }
+                );
 
+            var result = batches.Aggregate()
+                .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
+                .Unwind(b => b.DocumentIDs)
+                .ToList();
+            var docId = result[0].GetValue("DocumentIDs").AsString;
 
+            var result1 = batches.Aggregate()
+                .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
+                .Unwind(b => b.DocumentIDs)
+                .Project<BsonDocument, TempDocument>(bsonDoc => new TempDocument
+                    {
+                        DocumentId = bsonDoc.GetValue("DocumentIDs").AsString
+                    })
+                .ToList();
 
-            var query = documentsQuerable.Where(d => batchesQuerable.Where(b => b.Id == "61e82ed943389ffc5d277055" && b.DocumentIDs.Contains(d.ID)).Any());
-            List<Document> docs = query.ToList();
+            /*var result1 = batches.Aggregate()
+                .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
+                .Unwind(b => b.DocumentIDs)
+                .Lookup<BsonDocument, Document, DocumentJoin>(documents, bson => bson.GetElement(nameof(Batch.DocumentIDs)), d => d.ID, docJoin => docJoin.Documents)
+                .ToList();*/
 
-
-
+            /*var result1 = batches.Aggregate()
+                .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
+                .Unwind(b => b.DocumentIDs)
+                .Lookup<Batch, Document, DocumentJoin>(documents, b => b.DocumentIDs, d => d.ID, docJoin => docJoin.Documents)
+                .ToList();*/
         }
     }
 

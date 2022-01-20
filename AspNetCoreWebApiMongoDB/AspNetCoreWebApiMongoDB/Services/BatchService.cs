@@ -2,6 +2,7 @@
 using AspNetCoreWebApiMongoDB.Models.AggregationTempModels;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,7 +18,19 @@ namespace AspNetCoreWebApiMongoDB.Services
 
         public BatchService(MongoConnectionString connString)
         {
-            var client = new MongoClient(connString.ConnectionString);
+
+            var mongoConnectionUrl = new MongoUrl(connString.ConnectionString);
+            var mongoClientSettings = MongoClientSettings.FromUrl(mongoConnectionUrl);
+            mongoClientSettings.ClusterConfigurator = cb =>
+            {
+                cb.Subscribe<CommandStartedEvent>(e =>
+                {
+                    Debug.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
+                });
+            };
+
+            //var client = new MongoClient(connString.ConnectionString);
+            var client = new MongoClient(mongoClientSettings);
             this._db = client.GetDatabase(connString.DatabaseName);
         }
 

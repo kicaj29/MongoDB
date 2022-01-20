@@ -125,7 +125,7 @@ namespace AspNetCoreWebApiMongoDB.Services
                 .ToList();
         }
 
-        public void RunAggregation()
+        public async Task RunAggregation()
         {
             //this.SimpleLinq();
             //this.SimpleAggregation();
@@ -134,40 +134,29 @@ namespace AspNetCoreWebApiMongoDB.Services
             IMongoCollection<Batch> batches = this._db.GetCollection<Batch>("batches");
             IMongoCollection<Document> documents = this._db.GetCollection<Document>("documents");
 
-            // we can create projection here or in-line in the aggregate
-            ProjectionDefinition<BsonDocument, TempDocument> projection1 = Builders<BsonDocument>.Projection.Expression(bsonDoc =>
-                    new TempDocument
-                    {
-                        DocumentId = bsonDoc.GetValue("DocumentIDs").AsString
-                    }
-                );
-
             var result = batches.Aggregate()
                 .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
                 .Unwind(b => b.DocumentIDs)
                 .ToList();
             var docId = result[0].GetValue("DocumentIDs").AsString;
 
-            var result1 = batches.Aggregate()
-                .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
-                .Unwind(b => b.DocumentIDs)
-                .Project<BsonDocument, TempDocument>(bsonDoc => new TempDocument
-                    {
-                        DocumentId = bsonDoc.GetValue("DocumentIDs").AsString
-                    })
-                .ToList();
-
-            /*var result1 = batches.Aggregate()
-                .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
-                .Unwind(b => b.DocumentIDs)
-                .Lookup<BsonDocument, Document, DocumentJoin>(documents, bson => bson.GetElement(nameof(Batch.DocumentIDs)), d => d.ID, docJoin => docJoin.Documents)
-                .ToList();*/
-
-            /*var result1 = batches.Aggregate()
-                .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
-                .Unwind(b => b.DocumentIDs)
-                .Lookup<Batch, Document, DocumentJoin>(documents, b => b.DocumentIDs, d => d.ID, docJoin => docJoin.Documents)
-                .ToList();*/
+            try
+            {
+                var result2 = await batches.Aggregate()
+                    .Match(b => b.ID == "c4de2759-6580-42e6-a3e5-aabd9cf3fc8b")
+                    .Lookup<Document, Batch>("documents", nameof(Batch.DocumentIDs), nameof(Document.ID), "DocumentData")
+                    .Project($"{{ \"DocumentData.{nameof(Document.DocumentStatus)}\": 1 }}")
+                    .Unwind("DocumentData")
+                    .Project($"{{ status: \"$DocumentData.{nameof(Document.DocumentStatus)}.{nameof(DocumentStatus.Status)}\"," +
+                             $" actionType: \"$DocumentData.{nameof(Document.DocumentStatus)}.{nameof(DocumentStatus.ActionType)}\"," +
+                             $"_id: 0 }}"
+                        )
+                    .ToListAsync();
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 

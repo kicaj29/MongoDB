@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 
 namespace AspNetCoreWebApiMongoDB.Models.AggregationTempModels
 {
-    public class TempDocument
+    public class ActionAndStatus
     {
-        public string DocumentId { get; set; }
+        public string Status { get; set; }
+        public string ActionType { get; set; }
     }
 }

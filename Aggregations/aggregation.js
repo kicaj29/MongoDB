@@ -30,6 +30,7 @@ db.getCollection('batches').aggregate(
   },
   {
     '$project': {
+      '_id': 0
       'actionType': '$join_results.DocumentStatus.ActionType', 
       'status': '$join_results.DocumentStatus.Status'
     }

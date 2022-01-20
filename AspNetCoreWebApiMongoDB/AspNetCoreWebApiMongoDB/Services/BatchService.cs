@@ -148,15 +148,17 @@ namespace AspNetCoreWebApiMongoDB.Services
                     .Lookup<Document, Batch>("documents", nameof(Batch.DocumentIDs), nameof(Document.ID), "DocumentData")
                     .Project($"{{ \"DocumentData.{nameof(Document.DocumentStatus)}\": 1 }}")
                     .Unwind("DocumentData")
-                    .Project($"{{ status: \"$DocumentData.{nameof(Document.DocumentStatus)}.{nameof(DocumentStatus.Status)}\"," +
-                             $" actionType: \"$DocumentData.{nameof(Document.DocumentStatus)}.{nameof(DocumentStatus.ActionType)}\"," +
+                    .Project($"{{ Status: \"$DocumentData.{nameof(Document.DocumentStatus)}.{nameof(DocumentStatus.Status)}\"," +
+                             $" ActionType: \"$DocumentData.{nameof(Document.DocumentStatus)}.{nameof(DocumentStatus.ActionType)}\"," +
                              $"_id: 0 }}"
                         )
+                    .As<ActionAndStatus>()
                     .ToListAsync();
+
                 foreach(var item in result2)
                 {
-                    Debug.WriteLine(item.GetValue("status").AsString);
-                    Debug.WriteLine(item.GetValue("actionType").AsString);
+                    Debug.WriteLine(item.Status);
+                    Debug.WriteLine(item.ActionType);
                 }
             }
             catch(Exception ex)

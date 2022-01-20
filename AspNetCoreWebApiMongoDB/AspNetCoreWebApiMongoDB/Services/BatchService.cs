@@ -4,6 +4,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -152,6 +153,11 @@ namespace AspNetCoreWebApiMongoDB.Services
                              $"_id: 0 }}"
                         )
                     .ToListAsync();
+                foreach(var item in result2)
+                {
+                    Debug.WriteLine(item.GetValue("status").AsString);
+                    Debug.WriteLine(item.GetValue("actionType").AsString);
+                }
             }
             catch(Exception ex)
             {

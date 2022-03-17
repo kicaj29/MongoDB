@@ -1698,7 +1698,8 @@ Install [Database Tools](https://docs.mongodb.com/database-tools/installation/in
 Next run (it will create the database if it does not exist):
 
 ```
-PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" --file aircraft.json --collection aircraft --db flightmgmt --drop  2021-07-27T14:38:13.190+0200    connected to: mongodb+srv://[**REDACTED**]@myfirstcluster.a6uds.mongodb.net
+PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" --file aircraft.json --collection aircraft --db flightmgmt --drop  
+2021-07-27T14:38:13.190+0200    connected to: mongodb+srv://[**REDACTED**]@myfirstcluster.a6uds.mongodb.net
 2021-07-27T14:38:13.219+0200    dropping: flightmgmt.aircraft
 2021-07-27T14:38:13.309+0200    9 document(s) imported successfully. 0 document(s) failed to import.
 ```
@@ -1719,7 +1720,7 @@ PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kic
 2021-07-27T14:44:21.217+0200    4 document(s) imported successfully. 0 document(s) failed to import.
 ```
 
->NOTE: if we deal with BSON format then use command `mongorestore` to do the import.
+>NOTE: if we deal with BSON format then use command `mongorestore` to do the import. Example: `mongoimport --uri "mongodb+srv://kicaj:kicaj@myfirstcluster.a6uds.mongodb.net" --drop  dump` (dump is a folder name with dumped data).
 
 ## Exporting
 

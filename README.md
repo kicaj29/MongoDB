@@ -80,7 +80,9 @@
   - [Update statement](#update-statement)
   - [Delete statement](#delete-statement)
   - [Drop table/collection](#drop-tablecollection)
-- [Importing data](#importing-data)
+- [Importing.exporting data](#importingexporting-data)
+  - [Importing](#importing)
+  - [Exporting](#exporting)
 - [References/docs](#referencesdocs)
 - [Oplog](#oplog)
   - [Oplog stats](#oplog-stats)
@@ -1686,9 +1688,12 @@ DROP TABLE user
 db.user.drop()
 ```
 
-# Importing data
+# Importing.exporting data
 
 Install [Database Tools](https://docs.mongodb.com/database-tools/installation/installation-windows/).
+
+
+## Importing
 
 Next run (it will create the database if it does not exist):
 
@@ -1713,6 +1718,15 @@ PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kic
 2021-07-27T14:44:21.125+0200    dropping: flightmgmt.crew
 2021-07-27T14:44:21.217+0200    4 document(s) imported successfully. 0 document(s) failed to import.
 ```
+
+>NOTE: if we deal with BSON format then use command `mongorestore` to do the import.
+
+## Exporting
+
+There are 2 commands:
+
+* for JSON: 'mongoexport'
+* for BSON: 'mongodump'
 
 # References/docs
 https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mongo-app?view=aspnetcore-5.0&tabs=visual-studio   

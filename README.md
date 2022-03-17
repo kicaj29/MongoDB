@@ -1727,13 +1727,13 @@ There are 2 commands:
 
 * for JSON: `mongoexport`, sample run:
   ```cmd
-  PS D:\Programs\mongodb-database-tools-windows-x86_64-100.5.0\mongodb-database-tools-windows-x86_64-100.5.0\bin> .\mongoexport.exe "mongodb+srv://m001-student:m001-mongodb-basics@sandbox.mjboj.mongodb.net/sample_analytics" --collection="accounts" --out=accounts.json
+  PS D:\Programs\mongodb-database-tools-windows-x86_64-100.5.0\mongodb-database-tools-windows-x86_64-100.5.0\bin> .\mongoexport.exe "mongodb+srv://m001-student:[PASS]]@sandbox.[NAME].mongodb.net/sample_analytics" --collection="accounts" --out=accounts.json
   2022-03-17T12:40:21.574+0100    connected to: mongodb+srv://[**REDACTED**]@sandbox.mjboj.mongodb.net/sample_analytics
   2022-03-17T12:40:21.849+0100    exported 1746 records
   ```
 * for BSON: `mongodump`, sample run:
   ```cmd
-  PS D:\Programs\mongodb-database-tools-windows-x86_64-100.5.0\mongodb-database-tools-windows-x86_64-100.5.0\bin> .\mongodump.exe "mongodb+srv://m001-student:m001-mongodb-basics@sandbox.mjboj.mongodb.net/sample_analytics"
+  PS D:\Programs\mongodb-database-tools-windows-x86_64-100.5.0\mongodb-database-tools-windows-x86_64-100.5.0\bin> .\mongodump.exe "mongodb+srv://m001-student:[PASS]@sandbox.[NAME].mongodb.net/sample_analytics"
   2022-03-17T12:37:05.930+0100    WARNING: On some systems, a password provided directly in a connection string or using --uri may be visible to system status programs such as `ps` that may be invoked by other users. Consider omitting the password to provide it via stdin, or using the --config option to specify a configuration file with the password.
   2022-03-17T12:37:07.105+0100    writing sample_analytics.accounts to dump\sample_analytics\accounts.bson
   2022-03-17T12:37:07.214+0100    writing sample_analytics.customers to dump\sample_analytics\customers.bson

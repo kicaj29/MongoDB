@@ -1725,8 +1725,23 @@ PS D:\GitHub\kicaj29\MongoDB\data\sampledb> mongoimport --uri "mongodb+srv://kic
 
 There are 2 commands:
 
-* for JSON: 'mongoexport'
-* for BSON: 'mongodump'
+* for JSON: `mongoexport`, sample run:
+  ```cmd
+  PS D:\Programs\mongodb-database-tools-windows-x86_64-100.5.0\mongodb-database-tools-windows-x86_64-100.5.0\bin> .\mongoexport.exe "mongodb+srv://m001-student:m001-mongodb-basics@sandbox.mjboj.mongodb.net/sample_analytics" --collection="accounts" --out=accounts.json
+  2022-03-17T12:40:21.574+0100    connected to: mongodb+srv://[**REDACTED**]@sandbox.mjboj.mongodb.net/sample_analytics
+  2022-03-17T12:40:21.849+0100    exported 1746 records
+  ```
+* for BSON: `mongodump`, sample run:
+  ```cmd
+  PS D:\Programs\mongodb-database-tools-windows-x86_64-100.5.0\mongodb-database-tools-windows-x86_64-100.5.0\bin> .\mongodump.exe "mongodb+srv://m001-student:m001-mongodb-basics@sandbox.mjboj.mongodb.net/sample_analytics"
+  2022-03-17T12:37:05.930+0100    WARNING: On some systems, a password provided directly in a connection string or using --uri may be visible to system status programs such as `ps` that may be invoked by other users. Consider omitting the password to provide it via stdin, or using the --config option to specify a configuration file with the password.
+  2022-03-17T12:37:07.105+0100    writing sample_analytics.accounts to dump\sample_analytics\accounts.bson
+  2022-03-17T12:37:07.214+0100    writing sample_analytics.customers to dump\sample_analytics\customers.bson
+  2022-03-17T12:37:07.215+0100    writing sample_analytics.transactions to dump\sample_analytics\transactions.bson
+  2022-03-17T12:37:07.266+0100    done dumping sample_analytics.accounts (1746 documents)
+  2022-03-17T12:37:07.368+0100    done dumping sample_analytics.customers (500 documents)
+  2022-03-17T12:37:08.663+0100    done dumping sample_analytics.transactions (1746 documents)
+  ```
 
 # References/docs
 https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-mongo-app?view=aspnetcore-5.0&tabs=visual-studio   

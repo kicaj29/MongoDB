@@ -51,6 +51,7 @@
       - [specifying read concerns](#specifying-read-concerns)
       - [free text search](#free-text-search)
         - [full text search relevance](#full-text-search-relevance)
+      - [Sample queries](#sample-queries)
     - [Cursor](#cursor)
   - [Write concerns](#write-concerns)
   - [Update](#update)
@@ -1196,6 +1197,25 @@ db.crew.find({ $text: { $search: "Engineering anna"} }, {score: {$meta: "textSco
 
 ```
 db.crew.find({ $text: { $search: "Engineering anna"} }, {score: {$meta: "textScore"}}).sort({score: {$meta: "textScore"}})
+```
+
+#### Sample queries
+
+```
+{ "birth year": 1961, "start station name": "Howard St & Centre St" }
+
+{ "CreationDate": {$lt: new Date('2022-01-25')} }
+
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-25')} } ] }
+
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-25')} }, { "State": 100 } ] }
+ 
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-26')} }, { "State": "Processing" } ] }
+ 
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-26')} }, { "State": 100 } ] }
+ 
+// This one is working in mongo db client web ui atlas:
+{ $and: [ { "CreationDate": {$lt: ISODate('2021-07-03')} }, { "State": 100 } ] }
 ```
 
 ### Cursor

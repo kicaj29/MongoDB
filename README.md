@@ -615,6 +615,32 @@ but we can use for example `$lt` or `gt` and skip time in comparison:
 db.flights.find({departureDate: { $gt: ISODate("2020-02-20")} })
 ```
 
+```
+{ "birth year": 1961, "start station name": "Howard St & Centre St" }
+
+{ "CreationDate": {$lt: new Date('2022-01-25')} }
+
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-25')} } ] }
+
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-25')} }, { "State": 100 } ] }
+ 
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-26')} }, { "State": "Processing" } ] }
+ 
+{ $and: [ { "CreationDate": {$lt: new Date('2022-01-26')} }, { "State": 100 } ] }
+ 
+// This one is working in mongo db client web ui atlas:
+{ $and: [ { "CreationDate": {$lt: ISODate('2021-07-03')} }, { "State": 100 } ] }
+
+db.companies.find( { "created_at" : { "$gte": ISODate("2007-01-01"), "$lte": ISODate("2007-12-31")} }, { "created_at": 1 } )
+
+db.companies.find( { 
+  $or: [
+    { $and: [ { "founded_year" : 2004 }, { "category_code": { $in: ["social", "web"] } } ] },
+    { $and: [ { "founded_month" : 10 }, { "category_code": { $in: ["social", "web"] } } ] }
+  ]}, 
+  { "founded_year": 1, "founded_month": 1, "category_code": 1 } )
+```
+
 #### comparing arrays
 
 >By default arrays are the same if they have the same elements in the same order. So it has to exact match to be returned by the query.
@@ -1201,21 +1227,18 @@ db.crew.find({ $text: { $search: "Engineering anna"} }, {score: {$meta: "textSco
 
 #### Sample queries
 
+>NOTE : before running queries in `mongosh` run `use` command to switch to selected database because `find` operation does not return an error 
+if it is run agains not existing collection, for example it will return count 0.
+
 ```
-{ "birth year": 1961, "start station name": "Howard St & Centre St" }
 
-{ "CreationDate": {$lt: new Date('2022-01-25')} }
+db.zips.find( { "pop" : { "$lt": 1000 } } ).count()
 
-{ $and: [ { "CreationDate": {$lt: new Date('2022-01-25')} } ] }
+db.inspections.find( { "result" : "Out of Business", "sector": "Home Improvement Contractor - 100" } ).count()
 
-{ $and: [ { "CreationDate": {$lt: new Date('2022-01-25')} }, { "State": 100 } ] }
- 
-{ $and: [ { "CreationDate": {$lt: new Date('2022-01-26')} }, { "State": "Processing" } ] }
- 
-{ $and: [ { "CreationDate": {$lt: new Date('2022-01-26')} }, { "State": 100 } ] }
- 
-// This one is working in mongo db client web ui atlas:
-{ $and: [ { "CreationDate": {$lt: ISODate('2021-07-03')} }, { "State": 100 } ] }
+db.inspections.find( { "$or": [ { "date": "Feb 20 2015" }, { "date": "Feb 21 2015" } ], "sector": { "$ne": "Cigarette Retail Dealer - 127" }}).pretty()
+
+db.zips.find( { "pop" : { "$lt": 1000000, "$gt": 5000 } } ).count()
 ```
 
 ### Cursor

@@ -61,6 +61,9 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
                 DatabaseName = databaseName
             };
 
+
+            bool createIndex = false;
+
             // http://mongodb.github.io/mongo-csharp-driver/2.8/apidocs/html/N_MongoDB_Driver_Core_Events.htm
             var mongoConnectionUrl = new MongoUrl(this._mongoConnectionString.ConnectionString);
             var mongoClientSettings = MongoClientSettings.FromUrl(mongoConnectionUrl);
@@ -69,6 +72,18 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
                 cb.Subscribe<CommandStartedEvent>(e =>
                 {
                     Debug.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
+                    if (createIndex == true)
+                    {
+                        var client = new MongoClient(this._mongoConnectionString.ConnectionString);
+                        IMongoDatabase db = client.GetDatabase(this._mongoConnectionString.DatabaseName);
+                        IMongoCollection<Batch> batches = db.GetCollection<Batch>("batches");
+
+                        CreateIndexOptions options = new CreateIndexOptions() { Unique = false, Name = "MyTestIndex", TextIndexVersion = 12346, Version = 2 };
+                        StringFieldDefinition<Batch> field = new StringFieldDefinition<Batch>(nameof(Batch.Name));
+                        IndexKeysDefinition<Batch> indexDefinition = new IndexKeysDefinitionBuilder<Batch>().Ascending(field);
+                        CreateIndexModel<Batch> indexModel = new CreateIndexModel<Batch>(indexDefinition, options);
+                        string result = batches.Indexes.CreateOne(indexModel);
+                    }
                 });
             };
 
@@ -138,6 +153,7 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             // batchInVerificationConcurrencyNull.State = BatchState.Verification;
             batchInVerificationConcurrencyNull.Concurrency = null;
 
+            createIndex = true;
             batches.InsertMany(new List<Batch>(new Batch[] { batchReadyToProcess, batchProcessing, batchInVerificationConcurrencySet, batchInVerificationConcurrencyNull }));
 
             this._batchReadyToProcessId = batchReadyToProcess.ID;

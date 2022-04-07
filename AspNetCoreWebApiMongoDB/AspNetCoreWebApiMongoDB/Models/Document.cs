@@ -5,7 +5,7 @@ namespace AspNetCoreWebApiMongoDB.Models
 {
     public class Document
     {
-        public string _id { get; set; }
+        // public string _id { get; set; }
         public string ID { get; set; }
 
         public DocumentStatus DocumentStatus { get; set; }

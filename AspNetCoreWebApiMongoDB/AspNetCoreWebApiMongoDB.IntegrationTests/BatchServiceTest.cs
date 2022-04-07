@@ -1,11 +1,14 @@
 using AspNetCoreWebApiMongoDB.Models;
 using AspNetCoreWebApiMongoDB.Serializers;
 using AspNetCoreWebApiMongoDB.Services;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Events;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -45,7 +48,7 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
             provinces.InsertMany(new List<Province>(new Province[] { p1 }));
         }
 
-        // [OneTimeSetUp]
+        [OneTimeSetUp]
         public void OneTimeSetUp()
         {
 
@@ -58,8 +61,20 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
                 DatabaseName = databaseName
             };
 
+            // http://mongodb.github.io/mongo-csharp-driver/2.8/apidocs/html/N_MongoDB_Driver_Core_Events.htm
+            var mongoConnectionUrl = new MongoUrl(this._mongoConnectionString.ConnectionString);
+            var mongoClientSettings = MongoClientSettings.FromUrl(mongoConnectionUrl);
+            mongoClientSettings.ClusterConfigurator = cb =>
+            {
+                cb.Subscribe<CommandStartedEvent>(e =>
+                {
+                    Debug.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
+                });
+            };
+
             //generate sample data
-            var client = new MongoClient(this._mongoConnectionString.ConnectionString);
+            //var client = new MongoClient(this._mongoConnectionString.ConnectionString);
+            var client = new MongoClient(mongoClientSettings);
 
             this.CreateCountriesAndProvincies(client);
 
@@ -201,6 +216,23 @@ namespace AspNetCoreWebApiMongoDB.IntegrationTests
         {
             var batchService = new BatchService(this._mongoConnectionString);
             batchService.RunAggregation();
+        }
+
+        [Test]
+        public async Task TestIndexes()
+        {
+            var client = new MongoClient(this._mongoConnectionString.ConnectionString);
+
+            IMongoDatabase db = client.GetDatabase(this._mongoConnectionString.DatabaseName);
+            IMongoCollection<Batch> batches = db.GetCollection<Batch>("batches");
+
+            var existingBatchIndexes = await batches.Indexes.List().ToListAsync();
+
+            CreateIndexOptions options = new CreateIndexOptions() { Unique = false, Name = "MyTestIndex", TextIndexVersion = 12346, Version = 2 };
+            StringFieldDefinition<Batch> field = new StringFieldDefinition<Batch>(nameof(Batch.Name));
+            IndexKeysDefinition<Batch> indexDefinition = new IndexKeysDefinitionBuilder<Batch>().Ascending(field);
+            CreateIndexModel<Batch> indexModel = new CreateIndexModel<Batch>(indexDefinition, options);
+            string result = await batches.Indexes.CreateOneAsync(indexModel);
         }
     }
 }

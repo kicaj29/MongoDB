@@ -736,6 +736,9 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: {$size: 2
 ]
 ```
 
+Another example: `{"amenities": { "$size": 32, "$all": ["Wifi", "Kitchen"] }}`. This will return only these documents that have 32 amenities and they always have
+Wifi and Kitchen.
+
 * $elemMatch: returns arrays where an element matches multiple conditions
 
 For example return all flights where in a crew is entry with "Gotthard Merz" and "hoursSlept" equal 6.
@@ -788,6 +791,19 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.flights.find({crew: {$elemMa
     ]
   }
 ]
+```
+
+
+```
+ db.listingsAndReviews.find({ "$and": [ { "accommodates": { "$gt": 6 } }, { "reviews": { "$size": 50 } } ] }).count()
+ db.listingsAndReviews.find({ "$and": [ { "accommodates": { "$gt": 6 } }, { "reviews": { "$size": 50 } } ] }, { "name": 1 })
+ ```
+ Filter `{ "amenities": "Changing table" }` will return listingsAndReviews that have a string field `amenities` with value `Changing table` or a documents
+ that have array `amenities` that contains `Changing table` so it is not the same as `$in` operator.
+ ```
+ db.listingsAndReviews.find({ "$and": [ { "property_type": "House" }, { "amenities": "Changing table" } ] }).count()
+ db.listingsAndReviews.find({ "$and": [ { "property_type": "House" }, { "amenities": { "$in": ["Changing table"] } } ] }).count()
+ db.companies.find({ "offices": { "$elemMatch": { "city": "Seattle" } } }).count()
 ```
 
 ##### array projection operators
@@ -851,7 +867,7 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.crew.find({skills: "manageme
 ]
 ```
 
-* $ elemMatch: display only the first element to match the projection condition
+* $elemMatch: display only the first element to match the projection condition (so we can see that $elemMatch can be used as projection and also as filter).
 
 For example show first element that matches the conditions:
 
@@ -1240,6 +1256,19 @@ db.inspections.find( { "$or": [ { "date": "Feb 20 2015" }, { "date": "Feb 21 201
 
 db.zips.find( { "pop" : { "$lt": 1000000, "$gt": 5000 } } ).count()
 ```
+
+```expr``` can be used to compare fields from the same document (if we use `expr` we have to use `$` sign before field names). `expr` uses **aggregation syntax**,
+it does not use MQL syntax:
+```
+{"$expr": {"eq": ["$start station id", "$end station id"]}}
+db.trips.find({"$expr": {"$eq": ["$start station id", "$end station id"]}})
+db.trips.find({"$expr": {"$eq": ["$start station id", "$end station id"]}}).count()
+db.trips.find({"$expr": {"$and": [ { "$gt": ["$tripduration", 1200] }, { "$eq": ["$start station id", "$end station id"] } ]}}).count()
+db.companies.find({"$expr": {"$eq": ["$permalink", "$twitter_username"]}}).count()
+```
+
+> NOTE: be careful if you do a typo, for example in the query will be `"$gt": ["tripduration", 1200] }` instead of `"$gt": ["$tripduration", 1200] }` this filter 
+> will be evaluated as `true` value wihout throwing any arror.
 
 ### Cursor
 

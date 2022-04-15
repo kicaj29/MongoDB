@@ -32,7 +32,7 @@
       - [returns next set of results](#returns-next-set-of-results)
       - [pretty](#pretty)
       - [projection (selecting which fields should be displayed):](#projection-selecting-which-fields-should-be-displayed)
-      - [sorting](#sorting)
+      - [sorting and limit](#sorting-and-limit)
       - [findOne](#findone)
       - [filtering by date](#filtering-by-date)
       - [comparing arrays](#comparing-arrays)
@@ -91,6 +91,7 @@
   - [replication info on secondary nodes](#replication-info-on-secondary-nodes)
   - [replication service status](#replication-service-status)
 - [Backup and restore](#backup-and-restore)
+- [Aggregations](#aggregations)
 - [AspNetCore and MongoDB](#aspnetcore-and-mongodb)
 
 # Basics
@@ -559,19 +560,22 @@ db.movies.find( {runtime: 11}, {runtime:1, title:1, _id:0} ).pretty().limit(3)
 
 > If we specify columns with only 0 value then all not listed columns will be returned.
 
-#### sorting
+#### sorting and limit
 
 > MongoDB does not guarantee the order of the returned documents unless you use sort().
 
+Sort is always executed before limit, even if we write `cursor.limit().sort()` MongoDbB will execute `cursor.sort().limit()`.
+Using only limit usually does not make sense because we will get data in random order.
+
 ```
-Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: 1})
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).sort({title: 1}).limit(3).pretty()
 [
   { runtime: 11, title: '9' },
   { runtime: 11, title: 'A Is for Autism' },
   { runtime: 11, title: 'Apricot' }
 ]
 
-Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).pretty().limit(3).sort({title: -1})
+Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$eq: 11}}, {runtime:1, title:1, _id:0} ).sort({title: -1}).limit(3).pretty()
 [
   { runtime: 11, title: 'Your Friend the Rat' },
   { runtime: 11, title: 'The Portal' },
@@ -580,6 +584,9 @@ Atlas atlas-mritki-shard-0 [primary] sample_mflix> db.movies.find( {runtime: {$e
     title: 'The Life and Death of 9413, a Hollywood Extra'
   }
 ]
+```
+```
+db.trips.find({"birth year": { $ne: ''}}, {"birth year": 1}).sort({"birth year": -1}).limit(1)
 ```
 
 #### findOne
@@ -804,6 +811,13 @@ Atlas atlas-mritki-shard-0 [primary] flightmgmt> db.flights.find({crew: {$elemMa
  db.listingsAndReviews.find({ "$and": [ { "property_type": "House" }, { "amenities": "Changing table" } ] }).count()
  db.listingsAndReviews.find({ "$and": [ { "property_type": "House" }, { "amenities": { "$in": ["Changing table"] } } ] }).count()
  db.companies.find({ "offices": { "$elemMatch": { "city": "Seattle" } } }).count()
+ db.companies.find({ "relationships.0.person.last_name": "Zuckerberg" }, { "name": 1 }).pretty()
+ db.companies.find({ "relationships.0.person.first_name": "Mark", "relationships.0.title": { "$regex": "CEO" } }, { "name": 1 }).pretty()
+ db.companies.find({ "relationships": { "$elemMatch": { "is_past": true, "person.first_name": "Mark" } } }, { "name": 1 } ).pretty()
+ db.trips.find({ "start station location.coordinates.0": { "$eq": -74.015756 } }).pretty()
+ db.trips.find({ "start station location.coordinates.0": { "$lt": -74 } }).pretty()
+ db.inspections.find({  "address.city": "NEW YORK" }).count()
+
 ```
 
 ##### array projection operators
@@ -2002,6 +2016,46 @@ By default it will connect to local mongo db that works on url: `mongodb://local
 
 * Restore
 To restore db in local instance of mongodb that runs on default port run: `mongorestore dump`. The `dump` folder is the same folder that was created by `mongodump`. NOTE: this folder contains also `admin` folder and it looks that this folder is mandatory to execute restore because when I moved this folder to antoher location then the dum did not work.
+
+
+# Aggregations
+
+https://www.mongodb.com/docs/manual/reference/operator/aggregation/group/
+```
+db.listingsAndReviews.aggregate([
+  {
+    $project: { "address": 1, "_id": 0}
+  },
+  {
+    $group: { "_id": "$address.country" }
+  }
+])
+```
+```
+db.listingsAndReviews.aggregate([
+  {
+    $project: { "address": 1, "_id": 0}
+  },
+  {
+    $group: 
+      { 
+        "_id": "$address.country",
+        "count": { "$sum": 1 }
+      }
+  }
+])
+```
+```
+db.listingsAndReviews.aggregate([
+  {
+    $project: { "room_type": 1, "_id": 0}
+  },
+  {
+    $group: { "_id": "$room_type" }
+  }
+])
+```
+
 
 
 # AspNetCore and MongoDB

@@ -3,17 +3,17 @@ db.orchestrationBatch.find(
     })
    .projection({})
    .sort({_id:-1})
-   .limit(100)
+   .limit(1000)
    
 /*-----------------------------*/
 
 db.orchestrationBatch.find(
     {
-        "ID": "0aee8845-e1e0-492f-9faa-5b868e9cd349"
+        "ID": "3e9c3294-9c20-4d75-b4d8-a410d2703678"
     })
    .projection({})
    .sort({_id:-1})
-   .limit(100)
+   .limit(1000)
    
 
 /*-----------------------------*/
@@ -61,7 +61,50 @@ db.orchestrationBatch.updateOne(
     },
     {
         "arrayFilters": [ 
+            
             { "docElement.ID": { '$in': ['c04a277b-cc09-44a9-ba93-003a4fe75776', '129dfc33-0a59-416c-b8b6-22ea360de1ea'] }  } ,
             { "actionElement.Status": "Queued"}
             ]
     })
+    
+db.orchestrationBatch.updateOne(
+    {
+        "ID": "3e9c3294-9c20-4d75-b4d8-a410d2703678"
+    },
+    {
+        "$set": 
+        { 
+            "Documents.$[].Actions.$[actionElement]":   {
+                                            "ID": "aaaaaaaaa",
+                                            "ActionType": "NewActionType",
+                                            "Status": "Complete123"
+                                        }
+        },
+        "$push": {
+            "Documents": {
+                    "ID": "newDoc",
+                    "Name": "newPushDoc"
+                    }
+                }
+    },
+    {
+        "arrayFilters": [ 
+            { "actionElement.Status": "Queued"}
+            ]
+    })
+    
+db.orchestrationBatch.updateOne(
+    {
+        "ID": "3e9c3294-9c20-4d75-b4d8-a410d2703678"
+    },
+    {
+        "$push": {
+            "Documents": {
+                    "ID": "newDoc",
+                    "Name": "newPushDoc"
+                    }
+                }
+    },
+    {
+        "arrayFilters": [ ]
+    })    

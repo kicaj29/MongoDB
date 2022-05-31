@@ -1,4 +1,4 @@
-# Introduction
+# Chapter 01: Introduction
 
 * Memory
   * Aggregation
@@ -90,5 +90,13 @@ Atlas atlas-otfvmj-shard-0 [primary] sandbox>
 
 
 
-# MongoDB Indexes
+# Chapter 02: MongoDB Indexes
+
+## Two ways of storing database files
+
+* [directoryPerDB](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-storage.directoryPerDB)  
+  * wiredtiger directory for indexes (`--wiredTigerDirectoryForIndexes`, it is param of `mongod`)   
+    Then will be used 2 directories: `collection` and `index` inside DB directory. It allows mounting 2 different disk and parallelization in writing.
+    ![001_paraller_write_collection_and_indexes](./images/001_paraller_write_collection_and_indexes.png)
+* all databases in the same directory
 # Index Operations

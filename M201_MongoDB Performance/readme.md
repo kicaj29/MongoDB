@@ -99,4 +99,99 @@ Atlas atlas-otfvmj-shard-0 [primary] sandbox>
     Then will be used 2 directories: `collection` and `index` inside DB directory. It allows mounting 2 different disk and parallelization in writing.
     ![001_paraller_write_collection_and_indexes](./images/001_paraller_write_collection_and_indexes.png)
 * all databases in the same directory
-# Index Operations
+
+## Journal
+https://www.mongodb.com/docs/manual/core/journaling/
+https://www.youtube.com/watch?v=nDDWOxwot7o
+
+[Oplog vs Journal](https://www.quora.com/Whats-the-difference-between-MongoDBs-oplog-and-journal-When-is-data-written-to-them)
+
+"Oplog has information of operations (as whole) done in bson format (like insert and then json record). These oplog entries are replicated to other nodes of replica set.
+
+Journal have byte-level information of changes at (disk) data-blocks after last written checkpoint. With that information, the system can make recovery after a dirty shutdown."
+
+![002_jounral.png](./images/002_jounral.png)
+
+To minimize the performance impact of journal, the journal flushes our performed using group commits in a compressed format. All writes to the journal are atomic.
+
+To sync data with the journal before acknowledging write operation use `j:true` option but it has impact on performance.
+
+```
+db.collection.insert({...}, {writeConcern: {w: 1, j:true}})
+```
+## Single Field Indexes
+
+Connect to `mongosh`:
+```
+PS D:\Programs\mongosh-1.0.1-win32-x64\bin> .\mongosh "mongodb+srv://super-kicaj:kicaj@sandbox.kxcwk.mongodb.net"
+```
+
+### Read data without index
+
+To collect stats use `explain` command.
+
+```
+db.people.find({ "ssn" : "720-38-5636" }).explain("executionStats")
+```
+It will return many information, for now we will focus on few:
+
+* `queryPlanner.winningPlan`
+  * EOF means that probably we are in wrong namespace or the table does not exist at all.
+  * COLLSCAN means that we do not use index and we are checking every document
+* `executionStats.totalDocsExamined` returns amount of documents that have been checked.
+* `executionStats.nReturned` amount of returned document.
+* `executionStats.totalKeysExamined` amount of examined indexed keys (number of index entries scanned).
+
+### Create index and test it
+
+Create ascending index (1):
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.people.createIndex( { ssn : 1 } )
+ssn_1
+Atlas atlas-otfvmj-shard-0 [primary] sandbox>
+```
+
+If some documents do not have SSN field then that key entry is going to have a null value.
+
+Create an explainable object for the people collection:
+`exp = db.people.explain("executionStats")`.
+
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> exp = db.people.explain("executionStats")
+Explainable(sandbox.people)
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> exp.find( { "ssn" : "720-38-5636" } )
+```
+
+* `queryPlanner.winningPlan` is `IXSCAN`
+* `executionStats.totalDocsExamined` is 1
+* `executionStats.nReturned` is 1
+* `executionStats.totalKeysExamined` is 1
+
+Next we can use the same `exp` to check how will look another sample query:
+```
+exp.find( { last_name : "Acevedo" } )
+```
+
+#### Index on sub-document
+
+* Insert 2 documents with sub-document.
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.examples.insertOne( { _id : 0, subdoc : { indexedField: "value", otherField : "value" } } )
+{ acknowledged: true, insertedId: 0 }
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.examples.insertOne( { _id : 1, subdoc : { indexedField : "wrongValue", otherFotherField : "value" } } )
+{ acknowledged: true, insertedId: 1 }
+```
+
+* Next create index
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.examples.createIndex( { "subdoc.indexedField" : 1 } )
+subdoc.indexedField_1
+```
+
+* Next check execution plan
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.examples.explain("executionStats").find( { "subdoc.indexedField" : "value" })
+```
+
+>NOTE: we should never index on the field that points to a sub-document. Because doing so, we would have to query on the entire sub-document. It is much better to use dot notation when querying because we can just query on the fields that we care about in our sub-documents. If you do need to index on more than one field, you can use compound index.
+

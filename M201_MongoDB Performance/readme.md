@@ -279,7 +279,7 @@ We can see that the execution starts with the most nested element of the plan.
 
 The `stage: 'SORT'` tells us the index was not use for the sort and a sort had to done, so it had to be done in memory.
 
-```json
+```js
 {
   stage: 'SORT',
   nReturned: 7,

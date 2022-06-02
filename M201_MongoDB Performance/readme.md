@@ -195,3 +195,31 @@ Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.examples.explain("executionStat
 
 >NOTE: we should never index on the field that points to a sub-document. Because doing so, we would have to query on the entire sub-document. It is much better to use dot notation when querying because we can just query on the fields that we care about in our sub-documents. If you do need to index on more than one field, you can use compound index.
 
+### Range value, in value, multiple fields with index
+
+```
+exp.find( { ssn : { $gte : "555-00-0000", $lt : "556-00-0000" } } )
+```
+
+* `queryPlanner.winningPlan` is `IXSCAN`
+* `executionStats.totalDocsExamined` is 49
+* `executionStats.nReturned` is 49
+* `executionStats.totalKeysExamined` is 49
+
+```
+exp.find( { "ssn" : { $in : [ "001-29-9184", "177-45-0950", "265-67-9973" ] } } )
+```
+
+* `queryPlanner.winningPlan` is `IXSCAN`
+* `executionStats.totalDocsExamined` is 3
+* `executionStats.nReturned` is 3
+* `executionStats.totalKeysExamined` is 6
+
+`totalKeysExamined` equals `6` is due to the algorithm the system used, which can involve overshooting the values we are looking for.
+
+```
+exp.find( { "ssn" : { $in : [ "001-29-9184", "177-45-0950", "265-67-9973" ] }, last_name : { $gte : "H" } } )
+```
+
+* `queryPlanner.winningPlan` is `IXSCAN`
+* and we have additional `filter` object that points executed filtering on documents returned by the idnex.

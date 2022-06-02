@@ -1,3 +1,14 @@
+- [Chapter 01: Introduction](#chapter-01-introduction)
+  - [Uploading sample data](#uploading-sample-data)
+- [Chapter 02: MongoDB Indexes](#chapter-02-mongodb-indexes)
+  - [Two ways of storing database files](#two-ways-of-storing-database-files)
+  - [Journal](#journal)
+  - [Single Field Indexes](#single-field-indexes)
+    - [Read data without index](#read-data-without-index)
+    - [Create index and test it](#create-index-and-test-it)
+      - [Index on sub-document](#index-on-sub-document)
+    - [Range value, in value, multiple fields with index](#range-value-in-value-multiple-fields-with-index)
+  - [Understanding `explain` command](#understanding-explain-command)
 # Chapter 01: Introduction
 
 * Memory
@@ -223,3 +234,5 @@ exp.find( { "ssn" : { $in : [ "001-29-9184", "177-45-0950", "265-67-9973" ] }, l
 
 * `queryPlanner.winningPlan` is `IXSCAN`
 * and we have additional `filter` object that points executed filtering on documents returned by the idnex.
+
+## Understanding `explain` command

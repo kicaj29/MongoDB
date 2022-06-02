@@ -9,6 +9,8 @@
       - [Index on sub-document](#index-on-sub-document)
     - [Range value, in value, multiple fields with index](#range-value-in-value-multiple-fields-with-index)
   - [Understanding `explain` command](#understanding-explain-command)
+    - [Sorting](#sorting)
+  - [Understanding Explain for Sharded Clusters](#understanding-explain-for-sharded-clusters)
 # Chapter 01: Introduction
 
 * Memory
@@ -151,7 +153,7 @@ It will return many information, for now we will focus on few:
   * COLLSCAN means that we do not use index and we are checking every document
 * `executionStats.totalDocsExamined` returns amount of documents that have been checked.
 * `executionStats.nReturned` amount of returned document.
-* `executionStats.totalKeysExamined` amount of examined indexed keys (number of index entries scanned).
+* `executionStats.totalKeysExamined` amount of examined indexed keys (number of index entries scanned). If it is greater than 0 we know that some index has been used.
 
 ### Create index and test it
 
@@ -236,3 +238,108 @@ exp.find( { "ssn" : { $in : [ "001-29-9184", "177-45-0950", "265-67-9973" ] }, l
 * and we have additional `filter` object that points executed filtering on documents returned by the idnex.
 
 ## Understanding `explain` command
+
+Can help with answering these questions:
+
+* Is your query using the index you expect?
+* Is your query using an index to provide sort?
+* Is your query using an index to provide projection?
+* How selective is your index?
+* Which part of your plan is the most expensive?
+
+
+* `db.people.explain()`
+* `db.people.explain("queryPlanner")` - does the same as a call without parameter, it **does not execute the query**
+* `db.people.explain("executionStats")` - it will **execute** the query and next will return different stats about this execution 
+`db.people.explain("allPlansExecution")` - will **execute** the query and will return all possible stats (the most verbose option)
+
+
+>NOTE: In good execution plan `executionStats.nReturned` is the same as 
+`executionStats.totalKeysExamined` and `executionStats.totalDocsExamined`.
+
+If there are two indexes to consider execution plan will contain additional object `rejectedPlans`.
+
+```
+expRun = db.people.explain("executionStats")
+db.people.createIndex({last_name:1})
+expRun.find({"last_name":"Johnson", "address.state":"New York"})
+db.people.createIndex({"address.state": 1, last_name: 1})
+expRun.find({"last_name":"Johnson", "address.state":"New York"})
+```
+
+### Sorting
+
+```
+var res = db.people.find({"last_name":"Johnson", "address.state":"New York"}).sort({"birthday":1}).explain("executionStats")
+res.executionStats.executionStages
+```
+
+This will return plan with the following order: first is executed IXSCAN, next we are doing FETCH, and after fetch we are doing sorting using SORT.
+We can see that the execution starts with the most nested element of the plan.
+
+The `stage: 'SORT'` tells us the index was not use for the sort and a sort had to done, so it had to be done in memory.
+
+```json
+{
+  stage: 'SORT',
+  nReturned: 7,
+  executionTimeMillisEstimate: 0,
+  works: 17,
+  advanced: 7,
+  needTime: 8,
+  needYield: 0,
+  saveState: 0,
+  restoreState: 0,
+  isEOF: 1,
+  sortPattern: { birthday: 1 },
+  memLimit: 33554432,
+  type: 'simple',
+  totalDataSizeSorted: 3062,
+  usedDisk: false,
+  inputStage: {
+    stage: 'FETCH',
+    nReturned: 7,
+    executionTimeMillisEstimate: 0,
+    works: 8,
+    advanced: 7,
+    needTime: 0,
+    needYield: 0,
+    saveState: 0,
+    restoreState: 0,
+    isEOF: 1,
+    docsExamined: 7,
+    alreadyHasObj: 0,
+    inputStage: {
+      stage: 'IXSCAN',
+      nReturned: 7,
+      executionTimeMillisEstimate: 0,
+      works: 8,
+      advanced: 7,
+      needTime: 0,
+      needYield: 0,
+      saveState: 0,
+      restoreState: 0,
+      isEOF: 1,
+      keyPattern: { 'address.state': 1, last_name: 1 },
+      indexName: 'address.state_1_last_name_1',
+      isMultiKey: false,
+      multiKeyPaths: { 'address.state': [], last_name: [] },
+      isUnique: false,
+      isSparse: false,
+      isPartial: false,
+      indexVersion: 2,
+      direction: 'forward',
+      indexBounds: {
+        'address.state': [ '["New York", "New York"]' ],
+        last_name: [ '["Johnson", "Johnson"]' ]
+      },
+      keysExamined: 7,
+      seeks: 1,
+      dupsTested: 0,
+      dupsDropped: 0
+    }
+  }
+}
+```
+
+## Understanding Explain for Sharded Clusters

@@ -10,7 +10,10 @@
     - [Range value, in value, multiple fields with index](#range-value-in-value-multiple-fields-with-index)
   - [Understanding `explain` command](#understanding-explain-command)
     - [Sorting](#sorting)
-  - [Understanding Explain for Sharded Clusters](#understanding-explain-for-sharded-clusters)
+  - [Sorting with indexes - deep dive](#sorting-with-indexes---deep-dive)
+    - [Sort by ssn](#sort-by-ssn)
+    - [Sort by field with no index](#sort-by-field-with-no-index)
+    - [Sort ssn descending](#sort-ssn-descending)
 # Chapter 01: Introduction
 
 * Memory
@@ -342,4 +345,65 @@ The `stage: 'SORT'` tells us the index was not use for the sort and a sort had t
 }
 ```
 
-## Understanding Explain for Sharded Clusters
+## Sorting with indexes - deep dive
+
+* in memory (if more then 32MB is needed then sorting will be rejected)
+* using index
+
+It is important to note that the query planner considers indexes that can be helpful to either the query predicate or to the requested sort.
+
+Reset people collection `mongoimport --uri "mongodb+srv://super-kicaj:kicaj@sandbox.kxcwk.mongodb.net" --file people.json --collection people --db sandbox --drop`.
+
+and again create indexe
+```
+db.people.createIndex( { ssn : 1 } )
+```
+### Sort by ssn
+
+Create execution plan:
+```
+var exp = db.people.explain('executionStats')
+exp.find({}, {_id: 0, last_name: 1, fist_name: 1, ssn: 1}).sort({ssn: 1})
+```
+
+We can see these values:
+```json
+executionStats.totalKeysExamined: 50474,
+executionStats.totalDocsExamined: 50474,
+...
+winningPlan.stage: 'PROJECTION_SIMPLE',
+winningPlan.inputStage.stage: 'FETCH',
+winningPlan.inputStage.inputStage.stage: 'IXSCAN',
+```
+
+We see so  many total keys and docs because the index was not used for filtering but for sorting.
+
+### Sort by field with no index
+
+If we sort on field that does not have index `exp.find({}, {_id: 0, last_name: 1, fist_name: 1, ssn: 1}).sort({first_name: 1})` then in the plan we will see:
+
+```json
+executionStats.totalKeysExamined: 0,
+executionStats.totalDocsExamined: 50474,
+...
+winningPlan.stage: 'PROJECTION_SIMPLE',
+winningPlan.inputStage.stage: 'SORT' //SORT means that sorting has been executed in memory
+winningPlan.inputStage.inputStage.stage: 'COLLSCAN'
+```
+
+### Sort ssn descending
+
+If we sort by `ssn descending` we can still use index because it supports **traversing backwards** `exp.find({}, {_id: 0, last_name: 1, fist_name: 1, ssn: 1}).sort({ssn: -1})`.
+
+
+```json
+executionStats.totalKeysExamined: 50474,
+executionStats.totalDocsExamined: 50474,
+...
+winningPlan.stage: 'PROJECTION_SIMPLE',
+winningPlan.inputStage.stage: 'FETCH',
+winningPlan.inputStage.inputStage.stage: 'IXSCAN',
+winningPlan.inputStage.inputStage.direction: 'backward',
+```
+
+>NOTE: when we are sorting with a single field index, we can always sort documents either ascending or descending.

@@ -367,7 +367,7 @@ exp.find({}, {_id: 0, last_name: 1, fist_name: 1, ssn: 1}).sort({ssn: 1})
 ```
 
 We can see these values:
-```json
+```js
 executionStats.totalKeysExamined: 50474,
 executionStats.totalDocsExamined: 50474,
 ...
@@ -382,7 +382,7 @@ We see so  many total keys and docs because the index was not used for filtering
 
 If we sort on field that does not have index `exp.find({}, {_id: 0, last_name: 1, fist_name: 1, ssn: 1}).sort({first_name: 1})` then in the plan we will see:
 
-```json
+```js
 executionStats.totalKeysExamined: 0,
 executionStats.totalDocsExamined: 50474,
 ...
@@ -396,7 +396,7 @@ winningPlan.inputStage.inputStage.stage: 'COLLSCAN'
 If we sort by `ssn descending` we can still use index because it supports **traversing backwards** `exp.find({}, {_id: 0, last_name: 1, fist_name: 1, ssn: 1}).sort({ssn: -1})`.
 
 
-```json
+```js
 executionStats.totalKeysExamined: 50474,
 executionStats.totalDocsExamined: 50474,
 ...

@@ -15,7 +15,9 @@
     - [Sort by field with no index](#sort-by-field-with-no-index)
     - [Sort ssn descending](#sort-ssn-descending)
   - [Querying on Compound Indexes](#querying-on-compound-indexes)
-    - [Index prefixes](#index-prefixes)
+    - [Index prefixes for filtering](#index-prefixes-for-filtering)
+  - [Sorting using compound indexes](#sorting-using-compound-indexes)
+      - [Sorting using compound indexes - ascending, descending](#sorting-using-compound-indexes---ascending-descending)
 # Chapter 01: Introduction
 
 * Memory
@@ -458,12 +460,10 @@ We can see that now the plan looks much better - perfect ratio between Index Key
 
 ![010_compound-index-range-plan.png](./images/010_compound-index-range-plan.png)
 
-### Index prefixes
+### Index prefixes for filtering
 
 For a query on multiple fields that overlap with the index, identify which
 fields in the query can use the index. Basically we use only part of fields that create the whole index. 
-
->NOTE: it always starts from the left and continues.
 
 Remove previously created indexes and create new compound index.
 
@@ -499,3 +499,83 @@ This query is even worst `{"job": "Jewellery designer", "first_name": "Sara", "l
   ]
  },
 ```
+
+## Sorting using compound indexes
+
+```
+.\mongosh "mongodb://localhost:27071"
+```
+
+Check current index
+```js
+test> use m201                                                
+switched to db m201                                           
+m201> db.people.getIndexes()                                  
+[                                                             
+  { v: 2, key: { _id: 1 }, name: '_id_' },                    
+  {                                                           
+    v: 2,                                                     
+    key: { job: 1, employer: 1, last_name: 1, first_name: 1 },
+    name: 'job_employer_last_name_first_name',                
+    background: false                                         
+  }                                                           
+]
+m201> var exp = db.people.explain("executionStats")
+Explainable(m201.people)
+m201> exp.find({}).sort({ job: 1, employer: 1, last_name : 1, first_name : 1 })
+```
+
+We can see that we still do index scan to do sorting - **there is no SORT stage**.
+
+```js
+queryPlanner.winningPlan.stage: 'FETCH',
+queryPlanner.winningPlan.inputStage.stage: 'IXSCAN',
+queryPlanner.winningPlan.inputStage.indexBounds: {
+          job: [ '[MinKey, MaxKey]' ],
+          employer: [ '[MinKey, MaxKey]' ],
+          last_name: [ '[MinKey, MaxKey]' ],
+          first_name: [ '[MinKey, MaxKey]' ]
+        }
+```
+
+This query will also use index for sorting `exp.find({}).sort({ job: 1, employer: 1 })`
+
+But this query `exp.find({}).sort({ employer: 1, job: 1 })` will not use index for sorting because we sort in a way which is not used in the index, so we get:
+
+```js
+queryPlanner.winningPlan.stage: 'SORT',
+queryPlanner.winningPlan.inputStage.stage: 'COLLSCAN',
+```
+
+This will still use the index for sorting:
+`exp.find({ email:"jenniferfreeman@hotmail.com" }).sort({ job: 1 })`
+
+
+This doesn't follow an index prefix, and can't use the index for sorting, only filtering: `exp.find({ job: 'Graphic designer' }).sort({ last_name: 1 })`:
+
+```js
+queryPlanner.winningPlan.stage: 'FETCH',
+queryPlanner.winningPlan.inputStage.stage: 'SORT',
+queryPlanner.winningPlan.inputStage.inputStage.stage: 'IXSCAN',
+```
+#### Sorting using compound indexes - ascending, descending
+
+Uses the index for sorting: `exp.find().sort({job: -1, employer: -1})`, `exp.find().sort({job: 1, employer: 1})`
+
+Sorting is done in-memory: `exp.find().sort({job: -1, employer: 1})`, `exp.find().sort({job: 1, employer: -1})`. 
+
+Example with new collection:
+
+```js
+m201> db.coll.createIndex({ a: 1, b: -1, c: 1 })
+a_1_b_-1_c_1
+m201> var expColl = db.coll.explain("executionStats")
+Explainable(m201.coll)
+```
+
+* `expColl.find().sort({ a: 1, b: -1, c: 1 })` will use index for sorting.
+* `expColl.find().sort({ a: -1, b: 1, c: -1 })` will use index for sorting.
+* `expColl.find().sort({ a: 1, b: 1, c: -1 })` will not use index at all for sorting.
+**
+
+To use index for sorting on compound indexes all fields have to use the same order as index has or all fields have to use opposite order to order of the index.**

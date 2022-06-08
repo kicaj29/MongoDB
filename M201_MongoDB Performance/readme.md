@@ -576,6 +576,6 @@ Explainable(m201.coll)
 * `expColl.find().sort({ a: 1, b: -1, c: 1 })` will use index for sorting.
 * `expColl.find().sort({ a: -1, b: 1, c: -1 })` will use index for sorting.
 * `expColl.find().sort({ a: 1, b: 1, c: -1 })` will not use index at all for sorting.
-**
 
-To use index for sorting on compound indexes all fields have to use the same order as index has or all fields have to use opposite order to order of the index.**
+
+**To use index for sorting on compound indexes all fields have to use the same order as index has or all fields have to use opposite order to order of the index.**

@@ -15,6 +15,7 @@
     - [Sort by field with no index](#sort-by-field-with-no-index)
     - [Sort ssn descending](#sort-ssn-descending)
   - [Querying on Compound Indexes](#querying-on-compound-indexes)
+    - [Index prefixes](#index-prefixes)
 # Chapter 01: Introduction
 
 * Memory
@@ -449,6 +450,52 @@ If we run the plan we can see that it did not change, so it means that mongo did
 
 ![008_compound-index-create.png](./images/008_compound-index-create.png)
 
-We can see that now the plan looks much better
+We can see that now the plan looks much better - perfect ratio between Index Keys Examined and Documents Examined.
 
 ![009_compound-index-create-plan.png](./images/009_compound-index-create-plan.png)
+
+* Using range in query
+
+![010_compound-index-range-plan.png](./images/010_compound-index-range-plan.png)
+
+### Index prefixes
+
+For a query on multiple fields that overlap with the index, identify which
+fields in the query can use the index. Basically we use only part of fields that create the whole index. 
+
+>NOTE: it always starts from the left and continues.
+
+Remove previously created indexes and create new compound index.
+
+![011_compound-index-4-fields.png](./images/011_compound-index-4-fields.png)
+
+`{"job": "Jewellery designer", "employer": "Baldwin-Nichols"}`
+![012_compound-index-4-fields-query1.png](./images/012_compound-index-4-fields-query1.png)
+
+`{"job": "Jewellery designer", "employer": "Baldwin-Nichols", "last_name": "Cook"}`
+![013_compound-index-4-fields-query2.png](./images/013_compound-index-4-fields-query2.png)
+
+This query is less performant because we had to check 5 not necessary records in the index. It happened because we do not use the index in "continuous" way.
+`{"job": "Jewellery designer", "employer": "Baldwin-Nichols", "first_name": "Sara"}`
+![014_compound-index-4-fields-query3.png](./images/014_compound-index-4-fields-query3.png)
+
+This query is even worst `{"job": "Jewellery designer", "first_name": "Sara", "last_name": "Cook"}` because `employer` is not used for filtering.
+
+![015_compound-index-4-fields-query4.png](./images/015_compound-index-4-fields-query4.png)
+
+```js
+"indexBounds": {
+  "job": [
+   "[\"Jewellery designer\", \"Jewellery designer\"]"
+  ],
+  "employer": [
+   "[MinKey, MaxKey]"
+  ],
+  "last_name": [
+   "[\"Cook\", \"Cook\"]"
+  ],
+  "first_name": [
+   "[\"Sara\", \"Sara\"]"
+  ]
+ },
+```

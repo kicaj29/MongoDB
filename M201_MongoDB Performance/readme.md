@@ -14,6 +14,7 @@
     - [Sort by ssn](#sort-by-ssn)
     - [Sort by field with no index](#sort-by-field-with-no-index)
     - [Sort ssn descending](#sort-ssn-descending)
+  - [Querying on Compound Indexes](#querying-on-compound-indexes)
 # Chapter 01: Introduction
 
 * Memory
@@ -407,3 +408,47 @@ winningPlan.inputStage.inputStage.direction: 'backward',
 ```
 
 >NOTE: when we are sorting with a single field index, we can always sort documents either ascending or descending.
+
+## Querying on Compound Indexes
+
+If you have 2 fields, you might somehow think that your indexes are two-dimensional in some way, but they are not. They are one-dimensional, so it is like and ordered list.
+
+![003_more-fields-indexes.png](./images/003_more-fields-indexes.png)
+
+In this exercise we will use local mongodb.
+
+```
+PS D:\Programs\mongodb-database-tools-windows-x86_64-100.5.0\mongodb-database-tools-windows-x86_64-100.5.0\bin> mongoimport --uri "mongodb://localhost:27017" --file people.json --collection people --db m201 --drop
+2022-06-08T15:01:31.573+0200    connected to: mongodb://localhost:27017
+2022-06-08T15:01:31.576+0200    dropping: m201.people
+2022-06-08T15:01:32.846+0200    50474 document(s) imported successfully. 0 document(s) failed to import.
+```
+
+* Run query without indexes
+  
+![004_multiple-fields-no-indexes.png](./images/004_multiple-fields-no-indexes.png)
+
+* Create single field index (last name) and run the query again
+
+![004_single-field-index.png](./images/004_single-field-index.png)
+
+![005_single-field-index-plan.png](./images/005_single-field-index-plan.png)
+
+* Create single field index (first name) and run the query again
+
+We can see that now we have 2 indexes (last name, fist name)
+
+![006_second-single-field-index.png](./images/006_second-single-field-index.png)
+
+If we run the plan we can see that it did not change, so it means that mongo did not "join" these 2 indexes in this query
+
+![007_second-single-field-index-plan.png](./images/007_second-single-field-index-plan.png)
+
+
+* Create compound index and run the query again
+
+![008_compound-index-create.png](./images/008_compound-index-create.png)
+
+We can see that now the plan looks much better
+
+![009_compound-index-create-plan.png](./images/009_compound-index-create-plan.png)

@@ -39,10 +39,12 @@
   - [Resource allocation for indexes](#resource-allocation-for-indexes)
     - [Memory allocation for indexes](#memory-allocation-for-indexes)
     - [Edge cases for indexes](#edge-cases-for-indexes)
-  - [Basic benchmarking](#basic-benchmarking)
+  - [Basic benchmarking (comparing with different databases)](#basic-benchmarking-comparing-with-different-databases)
     - [Low level benchmarking](#low-level-benchmarking)
     - [Database server benchmarking](#database-server-benchmarking)
     - [Distributed Systems benchmarking](#distributed-systems-benchmarking)
+    - [Benchmarking anti-patters](#benchmarking-anti-patters)
+    - [Benchmarking conditions](#benchmarking-conditions)
 # Chapter 01: Introduction
 
 * Memory
@@ -1213,7 +1215,7 @@ tlas atlas-otfvmj-shard-0 [primary] sandbox> db.people.stats()
 
   ![021_edge-case.png](./images/021_edge-case.png)
 
-  ## Basic benchmarking
+  ## Basic benchmarking (comparing with different databases)
 
   ### Low level benchmarking
   
@@ -1245,4 +1247,16 @@ Note that most of these tools have been designed to test relational systems so s
 * Serialization
 * Fault tolerance
 
+### Benchmarking anti-patters
 
+* Database swap replace (like relational vs no-sql)
+* Using mongo shell for write and read requests
+* Using mongoimport to test write response
+* Local laptop to run tests
+* Using default MongoDB parameters
+
+### Benchmarking conditions
+
+* Hardware
+* Clients
+* Load

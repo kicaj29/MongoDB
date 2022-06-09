@@ -32,6 +32,8 @@
     - [Index for sorting and filtering](#index-for-sorting-and-filtering)
     - [Finding best index](#finding-best-index)
 - [Chapter 03: index operations](#chapter-03-index-operations)
+  - [Hybrid index build](#hybrid-index-build)
+  - [Query plans](#query-plans)
 # Chapter 01: Introduction
 
 * Memory
@@ -989,3 +991,34 @@ Possible indexes:
 * { "address.state": 1, "job": 1 }
 
 # Chapter 03: index operations
+
+## Hybrid index build
+
+In previous version of MongoDB there were 2 ways of building indexes:
+
+* `Foreground` index build `db.movies.createIndex( { title: 1 } )`
+  It was the most performant but had the unfortunate side effect of locking the entire database (or collection???) for the duration
+  of the index build. This meant that could neither read from or write to the database.
+
+* There is also way to run index creation using `background` flag, then it is not blocking because it uses incremental approach
+  (periodical locks) but it is  not as performant as foreground index: `db.collection.createIndex( {title: 1}, { background: true } )`.
+  If the index is larger than the available RAM, the incremental approach can take much longer than a foreground index build.
+  Other downside of background indexes is that the index structure resulting from this type of index build is less efficient than foreground indexes, resulting in less optimal index traversal.
+
+Disadvantages of both approaches have been addressed in new approach using `hybrid index build feature`. From 4.2 onwards, there will be no need for a background or a foreground index build - only one hybrid mechanism that takes the best of both worlds.
+
+The new hybrid index build has both the performance of a foreground index build and the non-locking properties of a background index build, meaning that all database operations can proceed uninhibited. This is now the only way to build an index on MongoDB.
+
+## Query plans
+
+Sample stages: IXSCAN -> FETCH (storage engine converts the record IDs into documents) -> SORT (next documents are passed to SORT stage where an in-memory sort will ne performed on them).
+
+* First the server will look at all available indexes on the collection. From there, it will identify which indexes are viable to satisfy  the query. We call these `candidate indexes`.
+
+* From the `candidate indexes`, the query optimizer can generate candidate plans. MongoDB has what is called an `empirical query planner`,
+  which means that there is going to be a trial period, where each of the candidate plans is executed over a short period of time.
+
+* The planner will then see which plan performed best (it can have different meaning, best can be plan that returned all the results first,or it might be, which returned a certain number of documents - there are many ways to describe `best`).
+
+* MongoDB cached which plan should use for given query shape - to not run trial every time.
+  

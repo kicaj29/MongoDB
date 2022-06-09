@@ -23,6 +23,7 @@
     - [Sparse indexes](#sparse-indexes)
   - [Text indexes](#text-indexes)
   - [Collations](#collations)
+    - [Enabling case insensitive collection](#enabling-case-insensitive-collection)
 # Chapter 01: Introduction
 
 * Memory
@@ -824,3 +825,23 @@ Collation schema:
 * Create an index with a collation that differs from the collection collation `db.foreign_text.createIndex( {name: 1},  {collation: {locale: 'it'}} )`
 * Uses the collection collation (Portuguese) `db.foreign_text.find( {name: 'Máximo'}).explain()` - this will use `COLLSACN` because we do not have an index for Portuguese collation.
 * Uses the index collation (Italian) `db.foreign_text.find( {name: 'Máximo'}).collation({locale: 'it'}).explain()` - this will use `IXSCAN` because earlier we created index that has Italian collation.
+
+### Enabling case insensitive collection
+```
+db.createCollection("no_sensitivity", { collation: { locale: "en", strength: 1 } })
+```
+Strength offers primary level of comparison, ignoring case and diacritics.
+
+* Insert few records
+
+```
+db.no_sensitivity.insert({name: 'aaaaa'})
+db.no_sensitivity.insert({name: 'aAAaa'})
+db.no_sensitivity.insert({name: 'AaAaa'})
+```
+
+* Next we can see that different sorts return the same results because it is executed in case insensitive manner.
+```
+db.no_sensitivity.find().sort({name: 1})
+db.no_sensitivity.find().sort({name: -1})
+```

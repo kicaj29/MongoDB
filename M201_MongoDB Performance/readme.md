@@ -45,6 +45,7 @@
     - [Distributed Systems benchmarking](#distributed-systems-benchmarking)
     - [Benchmarking anti-patters](#benchmarking-anti-patters)
     - [Benchmarking conditions](#benchmarking-conditions)
+  - [Lab 03](#lab-03)
 # Chapter 01: Introduction
 
 * Memory
@@ -1260,3 +1261,61 @@ Note that most of these tools have been designed to test relational systems so s
 * Hardware
 * Clients
 * Load
+
+## Lab 03
+
+```
+> var exp = db.restaurants.explain("executionStats")
+> exp.find({ "address.state": "NY", stars: { $gt: 3, $lt: 4 } }).sort({ name: 1 }).hint(REDACTED)
+```
+
+```
+{
+  "queryPlanner": {
+    "plannerVersion": 1,
+    "namespace": "m201.restaurants",
+    "indexFilterSet": false,
+    "parsedQuery": "REDACTED",
+    "winningPlan": {
+      "stage": "SORT",
+      "sortPattern": {
+        "name": 1
+      },
+      "inputStage": {
+        "stage": "SORT_KEY_GENERATOR",
+        "inputStage": {
+          "stage": "FETCH",
+          "inputStage": {
+            "stage": "IXSCAN",
+            "keyPattern": "REDACTED",
+            "indexName": "REDACTED",
+            "isMultiKey": false,
+            "isUnique": false,
+            "isSparse": false,
+            "isPartial": false,
+            "indexVersion": 1,
+            "direction": "forward",
+            "indexBounds": "REDACTED"
+          }
+        }
+      }
+    },
+    "rejectedPlans": [ ]
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 3335,
+    "executionTimeMillis": 20,
+    "totalKeysExamined": 3335,
+    "totalDocsExamined": 3335,
+    "executionStages": "REDACTED"
+  },
+  "serverInfo": "REDACTED",
+  "ok": 1
+}
+```
+
+* `{ "address.state": 1, "name": 1, "stars": 1 }` - No, if this index was used, then there would be no SORT stage.
+* `{ "address.state": 1, "stars": 1, "name": 1 }` - Yes, this query wouldn't need to examine any extra index keys, so since nReturned and totalKeysExamined are both 3,335 we know this index was used.
+* `{ "address.state": 1, "name": 1 }` - No, if this index was used, then there would be no SORT stage.
+* `{ "address.state": 1 }` - No, if this index was used, then we would expect that we'd have to examine some unnecessary documents and index keys. Since there are 50 states in the US, and we have 1,000,000 documents we'd expect to examine about 20,000 documents, not the 3,335 we see in the output.

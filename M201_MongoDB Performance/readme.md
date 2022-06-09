@@ -18,6 +18,7 @@
     - [Index prefixes for filtering](#index-prefixes-for-filtering)
   - [Sorting using compound indexes](#sorting-using-compound-indexes)
       - [Sorting using compound indexes - ascending, descending](#sorting-using-compound-indexes---ascending-descending)
+  - [Multikey Indexes](#multikey-indexes)
 # Chapter 01: Introduction
 
 * Memory
@@ -579,3 +580,92 @@ Explainable(m201.coll)
 
 
 **To use index for sorting on compound indexes all fields have to use the same order as index has or all fields have to use opposite order to order of the index.**
+
+## Multikey Indexes
+
+When we create an index on a field which is an array, this is what we call multikey index.
+It is called this because for each entry in the array, the server will create a separate index key.
+
+Multikey indexes are not supported on multiple fields which are arrays because we would create cartesian product - such index would be to huge to be able run queries fast on it.
+
+Multikey indexes do not support covered queries.
+
+We will use atlas mongodb: `.\mongosh "mongodb+srv://super-kicaj:kicaj@sandbox.kxcwk.mongodb.net"`.
+
+* Insert sample record
+
+```
+db.products.insertOne({
+  productName: "MongoDB Short Sleeve T-Shirt",
+  categories: ["T-Shirts", "Clothing", "Apparel"],
+  stock: { size: "L", color: "green", quantity: 100 }
+});
+```
+
+* Create index `db.products.createIndex({ "stock.quantity": 1})`
+
+* Check execution plan
+
+```
+var exp = db.products.explain()
+exp.find({ "stock.quantity": 100 })
+```
+
+We can see that index has been used and `'isMultiKey': false` which makes sense because the index is not for array.
+
+* Insert document that has stock field as an array
+
+```
+db.products.insertOne({
+  productName: "MongoDB Long Sleeve T-Shirt",
+  categories: ["T-Shirts", "Clothing", "Apparel"],
+  stock: [
+    { size: "S", color: "red", quantity: 25 },
+    { size: "S", color: "blue", quantity: 10 },
+    { size: "M", color: "blue", quantity: 50 }
+  ]
+});
+```
+
+* Re-run the same query again `exp.find({ "stock.quantity": 100 })`.
+We can see that now `'isMultiKey': true` even if we read document that does not have stock as an array - it means that MongoDB only recognizes that an index is multikey when a document is inserted where that field is an array.
+
+* If we try create compound index on two fields and both are array then it will fail
+
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.products.createIndex({ categories: 1, "stock.quantity": 1 })
+MongoServerError: Index build failed: 37152ff4-a9a8-4cdb-b1be-c6f75bee1d50: Collection sandbox.products ( ff32f168-af83-4bae-9f19-3a36528c2437 ) :: caused by :: cannot index parallel arrays [stock] [categories]
+```
+
+* But compound indexes with only 1 array field are good `db.products.createIndex({ productName: 1, "stock.quantity": 1 })`.
+
+* Next we can insert document where `productName` is an array but `stock` is not
+
+```
+db.products.insertOne({
+  productName: [
+    "MongoDB Short Sleeve T-Shirt",
+    "MongoDB Short Sleeve Shirt"
+  ],
+  categories: ["T-Shirts", "Clothing", "Apparel"],
+  stock: { size: "L", color: "green", quantity: 100 }
+});
+```
+
+* But we cannot insert a document where `productName` and `stock` are arrays.
+
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.products.insertOne({
+...   productName: [
+...     "MongoDB Short Sleeve T-Shirt",
+...     "MongoDB Short Sleeve Shirt"
+...   ],
+...   categories: ["T-Shirts", "Clothing", "Apparel"],
+...   stock: [
+...     { size: "S", color: "red", quantity: 25 },
+...     { size: "S", color: "blue", quantity: 10 },
+...     { size: "M", color: "blue", quantity: 50 }
+...   ]
+... });
+MongoServerError: cannot index parallel arrays [stock] [productName]
+```

@@ -22,6 +22,7 @@
   - [Partial indexes](#partial-indexes)
     - [Sparse indexes](#sparse-indexes)
   - [Text indexes](#text-indexes)
+  - [Collations](#collations)
 # Chapter 01: Introduction
 
 * Memory
@@ -795,3 +796,31 @@ db.products.find({
   $text: { $search: "t-shirt" }
 })
 ```
+
+## Collations
+
+It allow users to specify language specific rules for string comparison, such as rules for letter, case, and accent marks.
+
+Collation schema:
+```js
+{
+  locale: <string>,
+  caseLevel: <boolean>,
+  caseFirst: <string>,
+  strength: <int>,
+  numericOrdering: <boolean>,
+  alternate: <string>,
+  maxVariable: <string>,
+  backwards: <boolean>,
+}
+```
+
+* Create a collection-level collation for Portuguese `db.createCollection( "foreign_text", {collation: {locale: "pt"}})`
+* Insert an example document `db.foreign_text.insert({ "name": "Máximo", "text": "Bom dia minha gente!"})`
+* Explain the following query (uses the Portuguese collation) `db.foreign_text.find({ _id: {$exists:1 } } ).explain()`
+  In `winningPlan.inputStage.collation` we can see details about used collation.
+* Specify an Italian collation for a find query `db.foreign_text.find({ _id: {$exists:1 } }).collation({locale: 'it'})`
+* Specify a Spanish collation for an aggregation query `db.foreign_text.aggregate([ {$match: { _id: {$exists:1 }  }}], {collation: {locale: 'es'}})`
+* Create an index with a collation that differs from the collection collation `db.foreign_text.createIndex( {name: 1},  {collation: {locale: 'it'}} )`
+* Uses the collection collation (Portuguese) `db.foreign_text.find( {name: 'Máximo'}).explain()` - this will use `COLLSACN` because we do not have an index for Portuguese collation.
+* Uses the index collation (Italian) `db.foreign_text.find( {name: 'Máximo'}).collation({locale: 'it'}).explain()` - this will use `IXSCAN` because earlier we created index that has Italian collation.

@@ -20,6 +20,8 @@
       - [Sorting using compound indexes - ascending, descending](#sorting-using-compound-indexes---ascending-descending)
   - [Multikey Indexes](#multikey-indexes)
   - [Partial indexes](#partial-indexes)
+    - [Sparse indexes](#sparse-indexes)
+  - [Text indexes](#text-indexes)
 # Chapter 01: Introduction
 
 * Memory
@@ -704,7 +706,92 @@ db.restaurants.createIndex(
 )
 ```
 
-* Adding the stars predicate allows us to use the partial index
+* Adding the stars predicate allows us to use the partial index  
 ```
 exp.find({'address.city': 'New York', cuisine: 'Sichuan', stars: { $gt: 4.0 }})
+```
+
+>NOTE: in order to use a partial index, the query must be guaranteed to match a subset of the documents, specified by the filter expression.
+
+This will do `COLLSCAN`:
+
+```
+exp.find({'address.city': 'New York', cuisine: 'Sichuan'})
+```
+* Other rules
+  * You cannot specify both the `partialFilterExpression` and the spares options
+  * '_id' indexes cannot be partial indexes
+  * Shared key indexes cannot be partial indexes
+
+
+### Sparse indexes
+
+Spars indexes are special case of partial indexes, these 2 are equivalents:
+
+With a sparse index, we only index documents where the field exists that we are indexing on, 
+rather than creating index key with null value.
+
+```
+db.restaurants.createIndex(
+  { stars: 1 },
+  { spares: true }
+)
+
+db.restaurants.createdIndex(
+  { stars: 1 },
+  { partialFilterExpression: { 'stars': { $exists: true } } }
+)
+```
+
+Partial indexes are more flexible then sparse indexes because we can use in condition different field then field used in index:
+
+```
+db.restaurants.createdIndex(
+  { stars: 1 },
+  { partialFilterExpression: { 'cuisine': { $exists: true } } }
+)
+```
+
+## Text indexes
+
+```
+db.textExample.insertOne({ "statement": "MongoDB is the best" })
+db.textExample.insertOne({ "statement": "MongoDB is the worst." })
+```
+
+One way to query sub-strings is to use regular expressions:
+
+```
+db.textExample.find({ statement: /is the/ })
+```
+
+will return both documents but it is slow because it does not use any index.
+
+Text indexes are much faster.
+
+* Create text index `db.textExample.createIndex({ statement: "text" })`
+
+* Next we can query using the index `db.textExample.find({ $text: { $search: "MongoDB best" } })`
+
+  Under the hood they are very similar to multi-key indexes: for every unique word server will create index key.
+
+  For example for text `MongoDB Long Sleeve T-Shirt` would generate such index keys (by default text indexes are case insensitive so everything is lower case): mongo, long, sleeve, t, shirt.
+  This is because Unicode considers both spaces and hyphens as text delimiters.
+
+* Display each document with it's "textScore" `db.textExample.find({ $text: { $search : "MongoDB best" } }, { score: { $meta: "textScore" } })`
+
+* Sort the documents by their textScore so that the most relevant documents return first
+`db.textExample.find({ $text: { $search : "MongoDB best" } }, { score: { $meta: "textScore" } }).sort({ score: { $meta: "textScore" } })`
+
+* Sometimes text indexes can be very huge, one way is to reduce them is  to use compound indexes, for example
+```
+db.products.createIndex({ category: 1, productname: "text" });
+```
+
+Next we can narrow the query by specifying category name:
+```
+db.products.find({
+  category: "Clothing",
+  $text: { $search: "t-shirt" }
+})
 ```

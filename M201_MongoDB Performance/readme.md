@@ -34,6 +34,12 @@
 - [Chapter 03: index operations](#chapter-03-index-operations)
   - [Hybrid index build](#hybrid-index-build)
   - [Query plans](#query-plans)
+    - [Query plans - quize](#query-plans---quize)
+  - [Forcing indexes with hint](#forcing-indexes-with-hint)
+  - [Resource allocation for indexes](#resource-allocation-for-indexes)
+    - [Memory allocation for indexes](#memory-allocation-for-indexes)
+    - [Edge cases for indexes](#edge-cases-for-indexes)
+  - [Basic benchmarking](#basic-benchmarking)
 # Chapter 01: Introduction
 
 * Memory
@@ -1021,4 +1027,189 @@ Sample stages: IXSCAN -> FETCH (storage engine converts the record IDs into docu
 * The planner will then see which plan performed best (it can have different meaning, best can be plan that returned all the results first,or it might be, which returned a certain number of documents - there are many ways to describe `best`).
 
 * MongoDB cached which plan should use for given query shape - to not run trial every time.
+  
+### Query plans - quize
+
+* MongoDB's query optimizer is statistically based, where collection heuristics are used to determine which plan wins.
+  NO - MongoDB has an empirical query optimizer where query plans are ran against each other during a trial period.
+
+* Query plans are cached so that plans do not need to be generated and compared against each other every time a query is executed.
+  YES - that is correct.
+
+* When query plans are generated, for a given query, every index generates at least one query plan.
+  NO - only a subset of the indexes are considered as candidates for planning.
+
+* If an index can't be used, then there is no query plan for that query.
+  NO -  if there aren't any viable indexes for a given query, then a COLLSCAN stage will be the main stage of the query plan.
+
+## Forcing indexes with hint
+
+We can hint be providing field names or index name.
+```
+db.people.find({ name: "John Doe", zipcode: { $gt: "63000" } }).hint( {name: 1, zipcode: 1} )
+db.people.find({ name: "John Doe", zipcode: { $gt: "63000" } }).hint( "name_1_zipcode_1" )
+```
+
+Sometimes it is better to remove not needed index instead of using `hint`.
+
+## Resource allocation for indexes
+
+It is quite important to determine:
+* index size
+* resource allocation (disk, memory)
+  * disk usually is not an issue at all (in rare cases if we do not have a space for index file then the index will not be created at all)
+* edge cases
+
+We can run for the whole DB:
+```
+Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.stats()
+{
+  db: 'sandbox',
+  collections: 8,
+  views: 0,
+  objects: Long("1050487"),
+  avgObjSize: 191.3443859847861,
+  dataSize: Long("201004790"),
+  storageSize: Long("105394176"),
+  totalFreeStorageSize: Long("0"),
+  numExtents: Long("0"),
+  indexes: 16,
+  indexSize: Long("42258432"),
+  indexFreeStorageSize: Long("0"),
+  fileSize: Long("0"),
+  nsSizeMB: 0,
+  ok: 1
+}
+```
+
+or we can run per collection:
+
+```
+tlas atlas-otfvmj-shard-0 [primary] sandbox> db.people.stats()
+{
+  ns: 'sandbox.people',
+  size: 19574079,
+  count: 50474,
+  avgObjSize: 387,
+  storageSize: 11235328,
+  freeStorageSize: 1933312,
+  capped: false,
+  nindexes: 2,
+  indexBuilds: [],
+  totalIndexSize: 2600960,
+  totalSize: 13836288,
+  indexSizes: { _id_: 1798144, ssn_1: 802816 },
+  scaleFactor: 1,
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp(3, 1654793118),
+    signature: {
+      hash: Binary(Buffer.from("164e0366a6c1bbde3b1c308c98cb96d6f7307fdb", "hex"), 0),
+      keyId: Long("7071029582547124225")
+    }
+  },
+  operationTime: Timestamp(3, 1654793118)
+}
+```
+
+### Memory allocation for indexes
+
+**Our deployments should be sized in order to accommodate our indexes in RAM.** We should have enough memory to accommodate all our indexes. In other case disk will be used to traverse indexes. Some pages can be allocated in RAM and other pages will be on disk.
+
+* We can specify cache size in this way:  `mongod --dbpath data --wiredTigerCacheSzieGB 1`.
+* Checking how much of index is in memory, use stats.
+  * First sore result in `stats` variable because it contains a lot of entries `var stats = db.people.stats({ indexDetails: true })`
+  * Next we can read interesting parts.
+
+    By checking `'bytes currently in the cache'` and compare it with total index size `db.people.stats().indexSizes.ssn_1`.
+
+    ```
+    Atlas atlas-otfvmj-shard-0 [primary] sandbox> stats.indexDetails.ssn_1.cache
+    {
+      'bytes currently in the cache': 4042,
+      'bytes dirty in the cache cumulative': 0,
+      'bytes read into cache': 951,
+      'bytes written from cache': 0,
+      'checkpoint blocked page eviction': 0,
+      'checkpoint of history store file blocked non-history store page eviction': 0,
+      'data source pages selected for eviction unable to be evicted': 0,
+      'eviction gave up due to detecting an out of order on disk value behind the last update on the chain': 0,
+      'eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update': 0,
+      'eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update after validating the update chain': 0,
+      'eviction gave up due to detecting out of order timestamps on the update chain after the selected on disk update': 0,
+      'eviction walk passes of a file': 0,
+      'eviction walk target pages histogram - 0-9': 0,
+      'eviction walk target pages histogram - 10-31': 0,
+      'eviction walk target pages histogram - 128 and higher': 0,
+      'eviction walk target pages histogram - 32-63': 0,
+      'eviction walk target pages histogram - 64-128': 0,
+      'eviction walk target pages reduced due to history store cache pressure': 0,
+      'eviction walks abandoned': 0,
+      'eviction walks gave up because they restarted their walk twice': 0,
+      'eviction walks gave up because they saw too many pages and found no candidates': 0,
+      'eviction walks gave up because they saw too many pages and found too few candidates': 0,
+      'eviction walks reached end of tree': 0,
+      'eviction walks restarted': 0,
+      'eviction walks started from root of tree': 0,
+      'eviction walks started from saved location in tree': 0,
+      'hazard pointer blocked page eviction': 0,
+      'history store table insert calls': 0,
+      'history store table insert calls that returned restart': 0,
+      'history store table out-of-order resolved updates that lose their durable timestamp': 0,
+      'history store table out-of-order updates that were fixed up by reinserting with the fixed timestamp': 0,
+      'history store table reads': 0,
+      'history store table reads missed': 0,
+      'history store table reads requiring squashed modifies': 0,
+      'history store table truncation by rollback to stable to remove an unstable update': 0,
+      'history store table truncation by rollback to stable to remove an update': 0,
+      'history store table truncation to remove an update': 0,
+      'history store table truncation to remove range of updates due to key being removed from the data page during reconciliation': 0,
+      'history store table truncation to remove range of updates due to out-of-order timestamp update on data page': 0,
+      'history store table writes requiring squashed modifies': 0,
+      'in-memory page passed criteria to be split': 0,
+      'in-memory page splits': 0,
+      'internal pages evicted': 0,
+      'internal pages split during eviction': 0,
+      'leaf pages split during eviction': 0,
+      'modified pages evicted': 0,
+      'overflow pages read into cache': 0,
+      'page split during eviction deepened the tree': 0,
+      'page written requiring history store records': 0,
+      'pages read into cache': 1,
+      'pages read into cache after truncate': 0,
+      'pages read into cache after truncate in prepare state': 0,
+      'pages requested from the cache': 0,
+      'pages seen by eviction walk': 0,
+      'pages written from cache': 0,
+      'pages written requiring in-memory restoration': 0,
+      'the number of times full update inserted to history store': 0,
+      'the number of times reverse modify inserted to history store': 0,
+      'tracked dirty bytes in the cache': 0,
+      'unmodified pages evicted': 0
+    }    
+    ```
+
+### Edge cases for indexes
+
+* Occasional reports (executed much less frequently than operational workload)
+
+  In such cases indexes do not have to be necessarily in RAM and such operations can be executed using secondary nodes and not primary.
+  So those indexes are created only on designated nodes!
+
+
+* Right-end-side index increments (data that grow monotonically), like counters, dates, and incremental IDs. Typically in IoT.
+  
+  In such cases there is a risk the an index will be unbalanced.
+
+  ![020_unbalanced-tree.png](./images/020_unbalanced-tree.png)
+
+  You only grow positively. That means that the tree will always grow in the right-hand side. If we add to that fact that we only 
+  need to query on the most recent data, then the amount of index that actually need to be in RAM, is always going to be the 
+  right-end side of your index. So we have to care about how much data from the recently added data - how are we going to be needing
+  access all the time?
+
+  ![021_edge-case.png](./images/021_edge-case.png)
+
+  ## Basic benchmarking
+
   

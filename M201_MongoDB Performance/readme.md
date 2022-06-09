@@ -19,6 +19,7 @@
   - [Sorting using compound indexes](#sorting-using-compound-indexes)
       - [Sorting using compound indexes - ascending, descending](#sorting-using-compound-indexes---ascending-descending)
   - [Multikey Indexes](#multikey-indexes)
+  - [Partial indexes](#partial-indexes)
 # Chapter 01: Introduction
 
 * Memory
@@ -668,4 +669,42 @@ Atlas atlas-otfvmj-shard-0 [primary] sandbox> db.products.insertOne({
 ...   ]
 ... });
 MongoServerError: cannot index parallel arrays [stock] [productName]
+```
+
+## Partial indexes
+
+It is possible to index only subset of documents - it is helpful if index with all data would be to big to keep it in memory
+
+* Insert a restaurant document
+```
+db.restaurants.insertOne({
+   "name" : "Han Dynasty",
+   "cuisine" : "Sichuan",
+   "stars" : 4.4,
+   "address" : {
+      "street" : "90 3rd Ave",
+      "city" : "New York",
+      "state" : "NY",
+      "zipcode" : "10003"
+   }
+});
+```
+
+* Create an explainable object and run the query - we can see COLLSCAN
+```
+var exp = db.restaurants.explain()
+exp.find({'address.city': 'New York', cuisine: 'Sichuan'})
+```
+
+* Create a partial index
+```
+db.restaurants.createIndex(
+  { "address.city": 1, cuisine: 1 },
+  { partialFilterExpression: { 'stars': { $gte: 3.5 } } }
+)
+```
+
+* Adding the stars predicate allows us to use the partial index
+```
+exp.find({'address.city': 'New York', cuisine: 'Sichuan', stars: { $gt: 4.0 }})
 ```

@@ -24,6 +24,14 @@
   - [Text indexes](#text-indexes)
   - [Collations](#collations)
     - [Enabling case insensitive collection](#enabling-case-insensitive-collection)
+  - [Wildcard indexes](#wildcard-indexes)
+  - [Wildcard projection indexes](#wildcard-projection-indexes)
+    - [Wildcard indexes unpredictable query shapes](#wildcard-indexes-unpredictable-query-shapes)
+    - [Attribute pattern](#attribute-pattern)
+  - [Labs 02](#labs-02)
+    - [Index for sorting and filtering](#index-for-sorting-and-filtering)
+    - [Finding best index](#finding-best-index)
+- [Chapter 03: index operations](#chapter-03-index-operations)
 # Chapter 01: Introduction
 
 * Memory
@@ -595,6 +603,8 @@ Multikey indexes are not supported on multiple fields which are arrays because w
 
 Multikey indexes do not support covered queries.
 
+>NOTE: covered query is a query which can retrieve all the requested data from the index itself without needing to actually go to the collection.
+
 We will use atlas mongodb: `.\mongosh "mongodb+srv://super-kicaj:kicaj@sandbox.kxcwk.mongodb.net"`.
 
 * Insert sample record
@@ -845,3 +855,137 @@ db.no_sensitivity.insert({name: 'AaAaa'})
 db.no_sensitivity.find().sort({name: 1})
 db.no_sensitivity.find().sort({name: -1})
 ```
+
+## Wildcard indexes
+
+>NOTE: MongoDB 4.2 introduces wildcard indexes for supporting queries against unknown or arbitrary fields.
+
+Some workloads have unpredictable access patterns. For instance sensor data for IoT use cases or weather stations.
+In such cases, each query may include a combination of an arbitrary large number of different fields. This can make it very difficult
+to plan an effective indexing strategy. For these workloads we need a way to be able to index on multiple fields without the overhead of maintaining multiple indexes - here comes with help wildcard indexes.
+
+```
+db.data.createIndex({'$**': 1})
+```
+
+The wildcard index will generate one virtual single field index at query execution time. Next the planner will assess them using the standard query plan score.
+
+## Wildcard projection indexes
+
+We can narrow the index to only some sub-documents.
+
+* Include fields in the index
+```
+db.data.createIndex( {"sub_field.$**": 1}, { "wildcardProjection": { "included_field": 1 } } )
+```
+* Exclude fields in the index
+```
+db.data.createIndex( {"sub_field.$**": 1}, { "wildcardProjection": { "included_field": 0 } } )
+```
+
+* We can include, exclude also more nested sub-documents
+```
+db.data.createIndex( { "waveMeasurement.waves.$**": 1 } )
+```
+
+* **Wildcard indexes can cover queries if the query is on a single field only!** If the user is querying on a single field and uses
+a projection which returns only that field, then the wildcard index can cover the query. For example:
+```
+db.data.find({
+  { "waveMeasurement.waves.height": { $gt: 0.5 } },
+  { _id: 0, "waveMeasurement.waves.height": 1 },
+}).explain()
+```
+
+### Wildcard indexes unpredictable query shapes
+
+![016_arbitrary-query-shape.png](./images/016_arbitrary-query-shape.png)
+
+### Attribute pattern
+
+Attribute pattern is a data modeling strategy that we can use to index and query across an arbitrary number of attributes.
+
+![017_attribute-pattern.png](./images/017_attribute-pattern.png)
+
+![018_attribute-pattern.png](./images/018_attribute-pattern.png)
+
+![019_attribute-pattern.png](./images/019_attribute-pattern.png)
+
+## Labs 02
+
+### Index for sorting and filtering
+
+```
+db.personsCatalog.insertOne({
+   "first_name" : "Han Dynasty",
+   "ssn": "123456789",
+   "address" : {
+      "city" : "New York",
+      "state" : "NY"
+   }
+});
+db.personsCatalog.createIndex({ "first_name": 1, "address.state": -1, "address.city": -1, "ssn": 1 })
+```
+
+* Index will be used for both filtering and sorting
+  ```
+  db.personsCatalog.find({"first_name": "Jessica", "address.state": { $lt: "S" } }).sort( { "address.state": 1 } ).explain()
+  db.personsCatalog.find({"address.state": "South Dakota", "first_name": "Jessica" }).sort( { "address.city": -1 } ).explain()
+  db.personsCatalog.find({"first_name": "Jessica"}).sort( { "address.state": 1, "address.city": 1 } ).explain()
+  ```
+
+* Index will be used only for filtering
+
+  **To use index for sorting on compound indexes all fields have to use the same order as index has or all fields have to use opposite order to order of the index.** Here in index we have `state: -1, city: -1` so to use this index we would have to sort -1, -1 or 1, 1.
+
+  ```
+  db.personsCatalog.find({"first_name": "Jessica"}).sort( { "address.state": 1, "address.city": -1 } ).explain()
+  ```
+
+  Here sorting will be in memory (index not used) because the query has a gap in used fields (missing `address.state`) so it is not "continues" operation.
+  ```
+  db.personsCatalog.find({"first_name": { $gt: "J" } }).sort( { "address.city": -1 } ).explain()
+  ```
+
+* Index will not be used at all
+
+  ```
+  db.personsCatalog.find({"address.city": "West Cindy"}).sort( { "address.city": -1 } ).explain()  
+  ```
+
+### Finding best index
+
+All queries:
+
+```
+> db.people.find({
+    "address.state": "Nebraska",
+    "last_name": /^G/,
+    "job": "Police officer"
+  })
+
+> db.people.find({
+    "job": /^P/,
+    "first_name": /^C/,
+    "address.state": "Indiana"
+  }).sort({ "last_name": 1 })
+
+> db.people.find({
+  "address.state": "Connecticut",
+  "birthday": {
+    "$gte": ISODate("2010-01-01T00:00:00.000Z"),
+    "$lt": ISODate("2011-01-01T00:00:00.000Z")
+  }
+})
+```
+
+Possible indexes:
+
+* { "address.state": 1, "last_name": 1, "job": 1 } - this is the best index for the above 3 queries
+* { "job": 1, "address.state": 1, "first_name": 1 }
+* { "job": 1, "address.state": 1 }
+* { "address.state": 1, "job": 1, "first_name": 1 }
+* { "job": 1, "address.state": 1, "last_name": 1 }
+* { "address.state": 1, "job": 1 }
+
+# Chapter 03: index operations

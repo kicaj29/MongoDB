@@ -40,6 +40,9 @@
     - [Memory allocation for indexes](#memory-allocation-for-indexes)
     - [Edge cases for indexes](#edge-cases-for-indexes)
   - [Basic benchmarking](#basic-benchmarking)
+    - [Low level benchmarking](#low-level-benchmarking)
+    - [Database server benchmarking](#database-server-benchmarking)
+    - [Distributed Systems benchmarking](#distributed-systems-benchmarking)
 # Chapter 01: Introduction
 
 * Memory
@@ -1212,4 +1215,34 @@ tlas atlas-otfvmj-shard-0 [primary] sandbox> db.people.stats()
 
   ## Basic benchmarking
 
+  ### Low level benchmarking
   
+  * File I/O performance
+  * Scheduler performance
+  * Memory allocation and transfer speed
+  * Thread performance
+  * Database server performance
+  * Transaction isolation
+  * and more...
+
+Can be used for example https://github.com/akopytov/sysbench
+
+### Database server benchmarking
+
+* Data set load
+* Writes per second
+* Reads per second
+* Balanced workloads
+* Read/write ratio
+
+Can be used for example https://github.com/brianfrankcooper/YCSB
+
+Note that most of these tools have been designed to test relational systems so some additional configuration might be needed.
+
+### Distributed Systems benchmarking
+
+* Linearization
+* Serialization
+* Fault tolerance
+
+

@@ -1315,6 +1315,8 @@ Note that most of these tools have been designed to test relational systems so s
 }
 ```
 
+Given the redacted explain output above, select the index that was passed to hint:
+
 * `{ "address.state": 1, "name": 1, "stars": 1 }` - No, if this index was used, then there would be no SORT stage.
 * `{ "address.state": 1, "stars": 1, "name": 1 }` - Yes, this query wouldn't need to examine any extra index keys, so since nReturned and totalKeysExamined are both 3,335 we know this index was used.
 * `{ "address.state": 1, "name": 1 }` - No, if this index was used, then there would be no SORT stage.

@@ -58,6 +58,18 @@
   - [Two types of reads in shared cluster](#two-types-of-reads-in-shared-cluster)
   - [Sorting, limit and skip in shared cluster](#sorting-limit-and-skip-in-shared-cluster)
   - [Increasing write performance with sharding](#increasing-write-performance-with-sharding)
+  - [Reading from Secondaries](#reading-from-secondaries)
+  - [Replica sets with differing indexes](#replica-sets-with-differing-indexes)
+    - [Quiz for Replica sets with differing indexes](#quiz-for-replica-sets-with-differing-indexes)
+  - [Aggregation pipeline on a shared cluster](#aggregation-pipeline-on-a-shared-cluster)
+- [Exam](#exam)
+  - [Question 1](#question-1)
+  - [Question 2](#question-2)
+  - [Question 3](#question-3)
+  - [Question 4](#question-4)
+  - [Question 5](#question-5)
+  - [Question 6](#question-6)
+  - [Question 7](#question-7)
 # Chapter 01: Introduction
 
 * Memory
@@ -1616,3 +1628,193 @@ Shard key factors:
   ![039_bulk.png](./images/039_bulk.png)
 
   That`s why unordered bulk on shard cluster is much faster because we can operate in the same time on different machines.
+
+  ## Reading from Secondaries
+
+  By default read preference is `primary` node `db.people.find().readPref("primary")`. 
+  Other options are:
+  * primaryPreferred
+  * secondary
+  * secondaryPreferred (if none secondary is not available will ready from primary)
+  * nearest (will use node with lowest network latency)
+
+**Writes can be routed only to primary node.**
+
+When we read data from a secondary node there is a possibility that we are reading stale data. Since all write operations come into the primary, when we ready from the primary we always get newest data - `strong consistency`. 
+
+On the other hand, when we read from a secondary node, we are not guaranteed to be reading from the most up-to-date version of data. This is because data is asynchronously replicated to the secondaries as writes are still occurring on the primary - `eventual consistency`.
+
+It can be good idea to ready from second when we do not plan update data:
+
+* Analytics/reporting queries
+* Local reads and geographical-distributed replica sets.
+
+We have to be careful: some people have the false notion the if the primary is overworked by writes that they can be offload their reads to a secondary node. This is not the case, because, as writes come in to the primary, they are replicated to the secondaries. So it means that all members of replica set have roughly the same amount of write traffic.
+
+## Replica sets with differing indexes
+
+Makes sense only in dedicated cases:
+* specific analytics secondary nodes
+* reporting on delayed consistent data
+* text search
+
+Used node should never be allowed to be a primary node (Priority = 0, hidden node, delayed secondary).
+
+Scripts are available [here](./materials/replica-sets-with-differing-indexes/).
+
+### Quiz for Replica sets with differing indexes
+
+Which of the following conditions apply when creating indexes on secondaries?
+
+* A secondary should never be allowed to become primary
+  *True! If we were to allow it to become primary our application will experience the different set of indexes, once it becomes primary. That will potentially affect your application's expected performance.*
+
+* These indexes can only be set on secondary nodes
+  *False! The indexes can be set on the primary node, however we avoid doing so to prevent any impact on the operational workload, since these only service an analytical workload.*
+
+* We can create specific indexes on secondaries, even if they are not running in standalone mode
+  *False! No we first need to safely shutdown the secondary, and then restart it in standalone mode before we can create an index on it.*
+
+## Aggregation pipeline on a shared cluster
+
+* In this case all aggregation will be run on single shard because state is aggregation key
+  ![040_aggregations-in-shard.png](./images/040_aggregations-in-shard.png)
+
+* In this case our pipeline has to be split because we have to go through all shards and next merge all the results.
+  Merging will happen on randomly selected shared, unless we use `$out`, `$facet`, `$lookup`, `$graphLookup` then the merge will be always executed on `primary shard`.
+  ![041_aggregations-in-shard.png](./images/041_aggregations-in-shard.png)
+
+# Exam
+
+http://tapansahu-mongodbperformance.blogspot.com/2017/08
+
+## Question 1
+
+* You can index multiple array fields in a single document with a single compound index.
+  FALSE - *Multikey indexes allow us to index on array fields, but they do not support indexes on multiple array fields on single documents.*
+
+* Creating an ascending index on a monotonically increasing value creates index keys on the right-hand side of the index tree. TRUE
+  
+* Covered queries can sometimes still require some of your documents to be examined.
+  FALSE - *A query is covered if and only if it can be satisfied using the keys of the index.*
+
+* Write concern has no impact on write latency.
+  FALSE - *Different write concerns can certainly impact your write latency. Write concerns that only need acknowledgment from a primary are generally faster than ones that need acknowledgment from a majority of replica set members.*
+
+* A collection scan has a logarithmic search time.
+  FALSE - *No, collection scans have a linear search time.*
+
+## Question 2
+
+All are true
+
+* Indexes can decrease insert throughput.
+* Partial indexes can be used to reduce the size requirements of the indexes.
+* It's important to ensure that secondaries with indexes that differ from the primary not be eligible to become primary.
+* Indexes can be walked backwards by inverting their keys in a sort predicate.
+* It's important to ensure that your shard key has high cardinality.
+
+## Question 3
+
+* MongoDB indexes are markov trees.
+  FALSE, *MongoDB indexes are designed using B-trees*.
+
+* By default, all MongoDB user-created collections have an _id index.
+  TRUE
+
+* Background index builds block all reads and writes to the database that holds the collection being indexed.
+  FALSE, *foreground index builds block all reads and writes to the database that holds the collection being indexed. Background index builds don't have this limitation, but are generally slower than foreground index builds.*
+
+* It's common practice to co-locate your mongos on the same machine as your application to reduce latency.
+  TRUE
+
+* Collations can be used to create case insensitive indexes.
+  TRUE
+
+## Question 4
+
+* Indexes can solve the problem of slow queries.
+  TRUE
+
+* Indexes are fast to search because they're ordered such that you can find target values with few comparisons.
+  TRUE
+
+* Under heavy write load you should scale your read throughput by reading from secondaries.
+  FALSE - *since writes are replicated to secondaries all members of the replica set have about the same write workload, therefore sending reads to a secondary will not scale you read throughput. However, after MongoDB 4.0 all secondary reads can read from snapshot without being blocked by replication writes.*
+
+* When you index on a field that is an array it creates a partial index.
+  FALSE - *when you index a field that is an array it creates a multikey index*.
+
+* On a sharded cluster, aggregation queries using $lookup will require a merge stage on a random shard.
+  FALSE - *$lookup, $graphLookup, $facet, and $out all require a merge stage on the primary shard, not a random shard like most other merged queries.*
+
+## Question 5
+
+* Compound indexes can service queries that filter on any subset of the index keys.
+  FALSE - *not all subsets of a index's keys can service a query. The prefix of an index's keys can service a query.*
+
+* Compound indexes can service queries that filter on a prefix of the index keys.
+  TRUE
+
+* If no indexes can be used then a collection scan will be necessary.
+  TRUE
+
+* Query plans are removed from the plan cache on index creation, destruction, or server restart.
+  TRUE
+
+* By default, the explain() command will execute your query.
+  FALSE - *No, by default explain() will not execute your query. This is useful to test queries that need to run on a server under heavy load. Passing "executionStats" or "allPlansExecution" will execute the query and collect execution statistics.*
+
+## Question 6
+
+* An index doesn't become multikey until a document is inserted that has an array value.
+  TRUE
+
+* Running performance tests from the mongo shell is an acceptable way to benchmark your database.
+  FALSE - *you're performance tests should be as close to your production environment as possible. The mongo shell is designed for administrative tasks and ah-hoc queries, not performance benchmarks. You'd also be running in a single thread, which is unlikely how you'd be operating in production.*
+
+* You can use the --wiredTigerDirectoryForIndexes option to place your indexes on a different disk than your data.
+  TRUE
+
+* Indexes can only be traversed forward.
+  FALSE
+
+* The ideal ratio between nReturned and totalKeysExamined is 1.
+  TRUE
+
+## Question 7
+
+Given the following indexes:
+
+```js
+{ categories: 1, price: 1 }
+{ in_stock: 1, price: 1, name: 1 }
+```
+
+The following documents:
+
+```js
+{ price: 2.99, name: "Soap", in_stock: true, categories: ['Beauty', 'Personal Care'] }
+{ price: 7.99, name: "Knife", in_stock: false, categories: ['Outdoors'] }
+```
+
+And the following queries:
+```js
+db.products.find({ in_stock: true, price: { $gt: 1, $lt: 5 } }).sort({ name: 1 })
+db.products.find({ in_stock: true })
+db.products.find({ categories: 'Beauty' }).sort({ price: 1 })
+```
+
+* Index #1 would provide a sort to query #3.
+  TRUE
+
+* Index #2 properly uses the equality, sort, range rule for query #1.
+  FALSE - *if we were to build an index for query #1 using the equality, sort, range rule, then the index would be: `{ in_stock: 1, name: 1, price: 1 }`.*
+
+* There would be a total of 4 index keys created across all of these documents and indexes.
+  FALSE - there would be 5 total index keys { categories: 'Beauty', price: 2.99 }, { categories: 'Personal Care', price: 2.99 }, { categories: 'Outdoors', price: 7.99 }, { in_stock: true, price: 2.99, name: 'Soap' }, { in_stock: false, price: 7.99, name: 'Knife'}
+
+* Index #2 can be used by both query #1 and #2.
+  TRUE
+
+

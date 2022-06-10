@@ -53,6 +53,7 @@
   - [Aggregation performance](#aggregation-performance)
     - [Aggregation performance for "realtime" processing](#aggregation-performance-for-realtime-processing)
       - [Index usage for aggregations](#index-usage-for-aggregations)
+  - [Lab 04](#lab-04)
 # Chapter 01: Introduction
 
 * Memory
@@ -1461,6 +1462,7 @@ db.orders.aggregate([...], { explain: true })
 #### Index usage for aggregations
 
 Once the server encounters a stage that is not able to use indexes, all of the following stages will not longer be able to use indexes either. The query optimizer tries its best to detect when a stage can be moved forward so that indexes can be utilized.
+Transforming data in a pipeline stage prevents us from using indexes in the stages that follow.
 
 ```
 db.orders.createIndex({ cust_id: 1 })
@@ -1502,3 +1504,29 @@ db.orders.aggregate([
   * 100MB of RAM per stage (to mitigate this limit use indexes)
     * `db.orders.aggregate([...], { allowDiskUse: true } )` but it will be very slow (not good for real time processing)!. It does support `$graphLookup`.
 
+
+## Lab 04
+
+Drop all indexes (`_id` index will stay).
+```
+db.restaurants.dropIndexes()
+```
+Then, run the following query and you will receive an error:
+```
+db.restaurants.aggregate([
+      { $match: { stars: { $gt: 2 } } },
+      { $sort: { stars: 1 } },
+      { $group: { _id: "$cuisine", count: { $sum: 1 } } }
+  ])
+MongoServerError: PlanExecutor error during aggregation :: caused by :: Sort exceeded memory limit of 33554432 bytes, but did not opt in to external sorting.
+```
+
+To solve this problem we have to create the following index
+```
+db.restaurants.createIndex( { stars: 1 } )
+db.restaurants.aggregate([
+      { $match: { stars: { $gt: 2 } } },
+      { $sort: { stars: 1 } },
+      { $group: { _id: "$cuisine", count: { $sum: 1 } } }
+  ], { explain: true })
+```

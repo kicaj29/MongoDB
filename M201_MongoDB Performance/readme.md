@@ -54,6 +54,10 @@
     - [Aggregation performance for "realtime" processing](#aggregation-performance-for-realtime-processing)
       - [Index usage for aggregations](#index-usage-for-aggregations)
   - [Lab 04](#lab-04)
+- [Chapter 05: performance on cluster](#chapter-05-performance-on-cluster)
+  - [Two types of reads in shared cluster](#two-types-of-reads-in-shared-cluster)
+  - [Sorting, limit and skip in shared cluster](#sorting-limit-and-skip-in-shared-cluster)
+  - [Increasing write performance with sharding](#increasing-write-performance-with-sharding)
 # Chapter 01: Introduction
 
 * Memory
@@ -1530,3 +1534,85 @@ db.restaurants.aggregate([
       { $group: { _id: "$cuisine", count: { $sum: 1 } } }
   ], { explain: true })
 ```
+
+# Chapter 05: performance on cluster
+
+* Replica cluster/replica set (HA solution)
+
+  ![023_replica-set.png](./images/023_replica-set.png)
+
+* Shared cluster (horizontal scalability)
+
+  Sharding works by defining key based ranges - our shard key. It is important to get a good shared key.
+  ![024_sharding.png](./images/024_sharding.png)
+  ![025_sharding.png](./images/025_sharding.png)
+
+
+## Two types of reads in shared cluster
+
+* **Scattered gathered** were are we ping all nodes of our shard cluster for the information - this will happen if we are not using shared key
+* **Routed** queries, we we ask only single shard node or a small amount of shared nodes for the data that your application is requesting.
+  This will be used in case of using shared keys.
+
+## Sorting, limit and skip in shared cluster
+
+Sorting in a sharded cluster involves a few hurdles: first will be executed local sort in selected shards and next sort will be executed in the primary shared.
+
+![026_sharding-sorting.png](./images/026_sharding-sorting.png)
+![027_sharding-sorting.png](./images/027_sharding-sorting.png)
+
+![028_limit-skip.png](./images/028_limit-skip.png)
+![029_limit-skip.png](./images/029_limit-skip.png)
+
+## Increasing write performance with sharding
+
+`mongos` needs to be able to determine where to send the reads and writes. The shared key defines how our data is partitioned across different machines. The shared key is either an index field or an index compound of fields that exist in every document in the collection.
+
+
+![030_sharding-write-perf.png](./images/030_sharding-write-perf.png)
+![031_sharding-chunks.png](./images/031_sharding-chunks.png)
+
+In reality we have far more chunks:
+
+![032_sharding-chunks.png](./images/032_sharding-chunks.png)
+
+By default, a chunk`s maximum size is 64 MB. So many chunks exist in every single shard.
+
+Shard key factors:
+* Cardinality - number of distinct values for a given shared key. We want high cardinality (many possible values).
+  
+  For example this is not good because we have only one chunk and it means that we will have only one shard:
+
+  ![033_sharding-chunks.png](./images/033_sharding-chunks.png)
+
+  We can increase cardinality by creating compound shard key `sh.shardCollection('m201.people', { "address.state": 1, last_name: 1 })`
+
+* Frequency
+  
+  If some values occurs more often then we will have `hot shard`, for example:
+
+  ![034_hot-shard.png](./images/034_hot-shard.png)
+
+  If borders of a chunk are the same then we call such chunk `jumbo chunk`. This reduces effectiveness of horizontal scaling because we will not be able to move these chunks between shards.
+  ![035_jumbo-chunks.png](./images/035_jumbo-chunks.png)
+
+* Rate of change
+
+  Avoid monotonically increasing or decreasing values. Classic example is object id:
+  ![036_jumbo-chunks.png](./images/036_jumbo-chunks.png)
+
+  But it is ok to use `_id` as shard key when it is not a first key `sh.shardCollection('m201.people', { "last_name": 1, _id: 1 })`.
+  It increases cardinality of the shared key since it`s guaranteed to always be unique.
+
+* Bulk writes
+
+  Can be ordered or unordered.
+
+  ![037_ordered-bulk.png](./images/037_ordered-bulk.png)
+  ![038_unordered-bulk.png](./images/038_unordered-bulk.png)
+
+  In case of shared cluster `ordered` operations can be an issue because we have to wait for the last operation to complete before we can execute next. Usually it is not a problem for a replica set because it is a single machine.
+
+  ![039_bulk.png](./images/039_bulk.png)
+
+  That`s why unordered bulk on shard cluster is much faster because we can operate in the same time on different machines.

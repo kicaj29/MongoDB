@@ -49,6 +49,10 @@
 - [Chapter 04: CRUD optimizations](#chapter-04-crud-optimizations)
   - [Index optimizations](#index-optimizations)
   - [Covered queries](#covered-queries)
+  - [Regex performance](#regex-performance)
+  - [Aggregation performance](#aggregation-performance)
+    - [Aggregation performance for "realtime" processing](#aggregation-performance-for-realtime-processing)
+      - [Index usage for aggregations](#index-usage-for-aggregations)
 # Chapter 01: Introduction
 
 * Memory
@@ -1429,3 +1433,72 @@ var exp = db.restaurants.explain("executionStats")
   totalKeysExamined: 2988,
   totalDocsExamined: 2870,
   ```
+
+  ## Regex performance
+
+  Usually regex does not have good performance. Regex will use index only if we will use carrot operator which means **starts with**:
+  ```
+  db.users.find( { username: /^kirby/ } )
+  ```
+
+  ## Aggregation performance
+
+  Two types of aggregations:
+
+  * "Realtime" processing
+    * provide data for applications
+    * query performance is more important
+  * Batch processing
+    * provide data for analytics
+    * query performance is less important
+
+```
+db.orders.aggregate([...], { explain: true })
+```
+
+### Aggregation performance for "realtime" processing
+
+#### Index usage for aggregations
+
+Once the server encounters a stage that is not able to use indexes, all of the following stages will not longer be able to use indexes either. The query optimizer tries its best to detect when a stage can be moved forward so that indexes can be utilized.
+
+```
+db.orders.createIndex({ cust_id: 1 })
+```
+
+```
+db.orders.aggregate([
+  { $march: { cust_id: "287" } }, // index will be used
+  ...
+])
+```
+
+```
+db.orders.aggregate([
+  { $march: { cust_id: { $lt: 50 } } }, // index will be used
+  { $sort: { cust_id: 1 } }, index will be used
+  ...
+])
+```
+
+* top-key sorting algorithm
+
+  If you are doing a limit and doing a sort, you want to make sure that they are near each other and at the front of the pipeline.
+  When this happens, the server is able to do a top-k sort. This is when the server is able to only allocate memory for the final number of documents, in this case 10. This can happen even without indexes. This is one of the most highly performant non-index situations
+  that you can be in.
+
+  ```
+  db.orders.aggregate([
+    { $march: { cust_id: { $lt: 50 } } }, // index will be used
+    { $limit: 10 },
+    { $sort: { total: 1 } },
+    ...
+  ])
+  ```
+
+* memory constraints
+  * results are subject to 16 MB document limit. Aggregation generally outputs a single document and that single document will be       
+  susceptible to this limit
+  * 100MB of RAM per stage (to mitigate this limit use indexes)
+    * `db.orders.aggregate([...], { allowDiskUse: true } )` but it will be very slow (not good for real time processing)!. It does support `$graphLookup`.
+

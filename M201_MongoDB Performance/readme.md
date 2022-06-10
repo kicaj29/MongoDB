@@ -46,6 +46,9 @@
     - [Benchmarking anti-patters](#benchmarking-anti-patters)
     - [Benchmarking conditions](#benchmarking-conditions)
   - [Lab 03](#lab-03)
+- [Chapter 04: CRUD optimizations](#chapter-04-crud-optimizations)
+  - [Index optimizations](#index-optimizations)
+  - [Covered queries](#covered-queries)
 # Chapter 01: Introduction
 
 * Memory
@@ -1321,3 +1324,108 @@ Given the redacted explain output above, select the index that was passed to hin
 * `{ "address.state": 1, "stars": 1, "name": 1 }` - Yes, this query wouldn't need to examine any extra index keys, so since nReturned and totalKeysExamined are both 3,335 we know this index was used.
 * `{ "address.state": 1, "name": 1 }` - No, if this index was used, then there would be no SORT stage.
 * `{ "address.state": 1 }` - No, if this index was used, then we would expect that we'd have to examine some unnecessary documents and index keys. Since there are 50 states in the US, and we have 1,000,000 documents we'd expect to examine about 20,000 documents, not the 3,335 we see in the output.
+
+# Chapter 04: CRUD optimizations
+
+Make sure that `restaurants` collection has only index on `_id` field (there are 1 000 000 docs in this collection).
+
+## Index optimizations
+
+Compound index fields order should reflect their selectivity - first columns with the best selectivity.
+
+```
+var exp = db.restaurants.explain("executionStats")
+```
+
+* Not optimal index
+  ```
+  db.restaurants.createIndex({ "address.zipcode": 1, "cuisine": 1, "stars": 1 })
+  exp.find( { "address.zipcode": { $gt: '50000' }, cuisine: 'Sushi' } ).sort({ stars: -1 })
+  ```
+  We can see stats
+  ```js
+  nReturned: 11611,
+  executionTimeMillis: 576,
+  totalKeysExamined: 95988,
+  totalDocsExamined: 11611,
+  ```
+
+* Better index
+
+  Because `cuisine` has better selectivity. Index that starts from this field will be more optimal for the same query
+  ```
+  db.restaurants.createIndex({ "cuisine": 1, "address.zipcode": 1, "stars": 1 })
+  exp.find( { "address.zipcode": { $gt: '50000' }, cuisine: 'Sushi' } ).sort({ stars: -1 })
+  ```
+  We can see that now execution stats are better
+  ```js
+  executionSuccess: true,
+  nReturned: 11611,
+  executionTimeMillis: 86,
+  totalKeysExamined: 11611,
+  totalDocsExamined: 11611,
+  ```
+  but in `winningPlan` we can still see that we are doing sorting in memory and do not use index for this.
+
+  **We can only use an index for both filtering and sorting if the keys in our query predicate are equality conditions.
+  First usage different condition causes that sorting will not use index!** Because zip code is a range query, we are not able to use that index for sorting.
+
+* Even better index
+
+  ```
+  db.restaurants.createIndex({ "cuisine": 1, "stars": 1, "address.zipcode": 1 })
+  exp.find( { "address.zipcode": { $gt: '50000' }, cuisine: 'Sushi' } ).sort({ stars: -1 })
+  ```
+  Now we can see that sorting and filtering is done using index
+  ```js
+  winningPlan.stage: 'FETCH',
+  winningPlan.inputStage.stage: 'IXSCAN',
+  ...
+  executionSuccess: true,
+  nReturned: 11611,
+  executionTimeMillis: 49,
+  totalKeysExamined: 11663,
+  totalDocsExamined: 11611,  
+  ```
+
+  Optimal order of operations (usually works the best for most cases):
+
+  ![022_esr.png](./images/022_esr.png)
+
+  ## Covered queries
+
+  Covered queries are fully covered by index keys, there is no need to go to documents/collection.
+
+  ```
+  var exp = db.restaurants.explain("executionStats")
+  db.restaurants.createIndex({name: 1, cuisine: 1, stars: 1})
+  exp.find({name: { $gt: 'L' }, cuisine: 'Sushi', stars: { $gte: 4.0 } }, { _id: 0, name: 1, cuisine: 1, stars: 1 })
+  ```
+  In execution plan we can see that there is no `FETCH` stage:
+  ```js  
+  winningPlan.stage: 'PROJECTION_COVERED',
+  winningPlan.inputStage.stage: 'IXSCAN',
+  ...
+  executionSuccess: true,
+  nReturned: 2870,
+  executionTimeMillis: 14,
+  totalKeysExamined: 2988,
+  totalDocsExamined: 0,
+  ```
+
+  This query also uses INDEX but we have to do FETCH because when all fields are 0 in projection then will be returned all other fields 
+  and these fields are not available in the index.
+  ```
+  exp.find({name: { $gt: 'L' }, cuisine: 'Sushi', stars: { $gte: 4.0 } }, { _id: 0, address: 0 })
+  ```
+  ```js
+  winningPlan.stage: 'PROJECTION_DEFAULT',
+  winningPlan.inputStage.stage: 'FETCH',
+  winningPlan.inputStage.inputStage.stage: 'IXSCAN',
+  ...
+  executionSuccess: true,
+  nReturned: 2870,
+  executionTimeMillis: 16,
+  totalKeysExamined: 2988,
+  totalDocsExamined: 2870,
+  ```

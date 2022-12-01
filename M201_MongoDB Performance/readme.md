@@ -23,6 +23,8 @@
     - [Sparse indexes](#sparse-indexes)
   - [Text indexes](#text-indexes)
   - [Collations](#collations)
+    - [Collection - how to check current values](#collection---how-to-check-current-values)
+    - [Collation default values in Atlas](#collation-default-values-in-atlas)
     - [Enabling case insensitive collection](#enabling-case-insensitive-collection)
   - [Wildcard indexes](#wildcard-indexes)
   - [Wildcard projection indexes](#wildcard-projection-indexes)
@@ -873,6 +875,60 @@ Collation schema:
 * Create an index with a collation that differs from the collection collation `db.foreign_text.createIndex( {name: 1},  {collation: {locale: 'it'}} )`
 * Uses the collection collation (Portuguese) `db.foreign_text.find( {name: 'Máximo'}).explain()` - this will use `COLLSACN` because we do not have an index for Portuguese collation.
 * Uses the index collation (Italian) `db.foreign_text.find( {name: 'Máximo'}).collation({locale: 'it'}).explain()` - this will use `IXSCAN` because earlier we created index that has Italian collation.
+
+### Collection - how to check current values
+
+* Connect to mongo cluster
+
+```
+PS D:\Programs\mongosh-1.0.1-win32-x64\bin> .\mongosh "mongodb://localhost:27017"
+Current Mongosh Log ID: 63886b0339f962c20d1ac8fb
+Connecting to:          mongodb://localhost:27017/?directConnection=true&serverSelectionTimeoutMS=2000
+Using MongoDB:          4.4.17
+Using Mongosh:          1.0.1
+```
+
+* Switch to the right BD
+
+```
+test> use MyDB
+switched to db MyDB
+```
+
+* Run selected commands.
+
+```
+MyDB> db.getCollectionInfos({name:'TestCollection'})[0]
+{                                                             
+  name: 'TestCollection',                                    
+  type: 'collection',                                         
+  options: {},                                                
+  info: {                                                     
+    readOnly: false,                                          
+    uuid: UUID("2764a523-811e-46f3-86f2-5aa6e800b552")        
+  },                                                          
+  idIndex: { v: 2, key: { _id: 1 }, name: '_id_' }            
+}                                                             
+```
+
+```
+MyDB> db.ServiceMetadata.find().explain().queryPlanner
+{
+  plannerVersion: 1,
+  namespace: 'MyDB.TestCollection',
+  indexFilterSet: false,
+  parsedQuery: {},
+  winningPlan: { stage: 'COLLSCAN', direction: 'forward' },
+  rejectedPlans: []
+}
+```
+
+> NOTE: not sure why but in my case these commands printed limited info, [here](https://stackoverflow.com/questions/48840147/how-to-view-or-modify-collation-options-set-on-a-mongodb-collection) more data was printed.
+
+### Collation default values in Atlas
+
+https://www.mongodb.com/docs/manual/reference/collation-locales-defaults/#collation-default-parameters
+
 
 ### Enabling case insensitive collection
 ```

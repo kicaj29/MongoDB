@@ -22,8 +22,13 @@ namespace MongoDBSchemaDetector
                         IMongoDatabase db = client.GetDatabase(dbName);
                         //TODO: use RunCommandAsync
                         // Use empty projection to make sure that we do not return any values
-                        dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>("{\"find\": \"collection1\", \"filter\": {\"ID\": \"b32a1626-65be-4cc1-81a8-0b6e5cea28d0\" }, \"projection\": {\"_id\": 0, \"BatchState\": 0} }"));
-                        List<Object> temp = (List<Object>)expandoResult.cursor.firstBatch;
+                        //dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>("{\"find\": \"collection1\", \"filter\": {\"ID\": \"b32a1626-65be-4cc1-81a8-0b6e5cea28d0\" }, \"projection\": {\"_id\": 0, \"BatchState\": 0} }"));
+                        dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>("{\"count\": \"collection1\", \"query\": {\"ID\": \"b32a1626-65be-4cc1-81a8-0b6e5cea28d0\" }, \"limit\": 1 }"));
+                        results.Add(new DetectorResultItem()
+                        {
+                            RuleName = "Rule1",
+                            Exists = expandoResult.n >= 1
+                        });
                     }
                 });
             }

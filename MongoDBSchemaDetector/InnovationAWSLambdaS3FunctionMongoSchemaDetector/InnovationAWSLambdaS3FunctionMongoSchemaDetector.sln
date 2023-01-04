@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InnovationAWSLambdaS3FunctionMongoSchemaDetector", "InnovationAWSLambdaS3FunctionMongoSchemaDetector\InnovationAWSLambdaS3FunctionMongoSchemaDetector.csproj", "{F4E61A29-FA3A-4C2C-8F18-0EF5156B58EF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InnovationAWSLambdaS3FunctionMongoSchemaDetector.Tests", "InnovationAWSLambdaS3FunctionMongoSchemaDetector.Tests\InnovationAWSLambdaS3FunctionMongoSchemaDetector.Tests.csproj", "{386F983E-A5F4-40EE-A598-3AAB1FA5E54D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F4E61A29-FA3A-4C2C-8F18-0EF5156B58EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4E61A29-FA3A-4C2C-8F18-0EF5156B58EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4E61A29-FA3A-4C2C-8F18-0EF5156B58EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4E61A29-FA3A-4C2C-8F18-0EF5156B58EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{386F983E-A5F4-40EE-A598-3AAB1FA5E54D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{386F983E-A5F4-40EE-A598-3AAB1FA5E54D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{386F983E-A5F4-40EE-A598-3AAB1FA5E54D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{386F983E-A5F4-40EE-A598-3AAB1FA5E54D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {60EBED3C-5E8F-4D3F-B049-4246A5D284C3}
+	EndGlobalSection
+EndGlobal

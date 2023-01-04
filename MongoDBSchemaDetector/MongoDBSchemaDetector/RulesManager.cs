@@ -1,5 +1,4 @@
 ﻿using MongoDB.Driver;
-using System.Dynamic;
 
 namespace MongoDBSchemaDetector
 {
@@ -11,6 +10,14 @@ namespace MongoDBSchemaDetector
             MongoClientSettings clientSettings = MongoClientSettings.FromUrl(mongoUrl);
             MongoClient client = new MongoClient(clientSettings);
 
+            QueryList queryList = new QueryList();
+            queryList.Queries.Add(new QueryDefinition()
+            {
+                CollectionName = "collection1",
+                FriendlyName = "Exist item with ID = b32a1626-65be-4cc1-81a8-0b6e5cea28d0",
+                Query = "{\"ID\": \"b32a1626-65be-4cc1-81a8-0b6e5cea28d0\"}"
+            });
+
             List<DetectorResultItem> results = new List<DetectorResultItem>();
 
             using (IAsyncCursor<string> cursor = await client.ListDatabaseNamesAsync())
@@ -21,14 +28,15 @@ namespace MongoDBSchemaDetector
                     {
                         IMongoDatabase db = client.GetDatabase(dbName);
                         //TODO: use RunCommandAsync
-                        // Use empty projection to make sure that we do not return any values
-                        //dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>("{\"find\": \"collection1\", \"filter\": {\"ID\": \"b32a1626-65be-4cc1-81a8-0b6e5cea28d0\" }, \"projection\": {\"_id\": 0, \"BatchState\": 0} }"));
-                        dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>("{\"count\": \"collection1\", \"query\": {\"ID\": \"b32a1626-65be-4cc1-81a8-0b6e5cea28d0\" }, \"limit\": 1 }"));
-                        results.Add(new DetectorResultItem()
+                        foreach(QueryDefinition query in queryList.Queries)
                         {
-                            RuleName = "Rule1",
-                            Exists = expandoResult.n >= 1
-                        });
+                            dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>($"{{\"count\": \"{query.CollectionName}\", \"query\": {query.Query}, \"limit\": 1 }}"));
+                            results.Add(new DetectorResultItem()
+                            {
+                                RuleName = query.FriendlyName!,
+                                Exists = expandoResult.n >= 1
+                            });
+                        }
                     }
                 });
             }

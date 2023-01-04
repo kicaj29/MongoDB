@@ -1,3 +1,12 @@
+# Sample queries
+
+```json
+{
+    "ID": "b32a1626-65be-4cc1-81a8-0b6e5cea28d0"
+}
+```
+
+
 # Links
 
 https://www.mongodb.com/docs/compass/current/schema/

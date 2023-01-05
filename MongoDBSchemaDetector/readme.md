@@ -89,13 +89,13 @@ In case lambda has to connect to a database via its dedicated `VPC endpoint` the
 
 * Create security group `InnovationSprintSecurityGroupMongoSchemaDetector` which accept all traffic (could be more strict to improve security) .
 
-* Add lambda to the `VPC` and assign the same subnets which are attached to the database `VPC endpoint`. Also select created security group `InnovationSprintSecurityGroupMongoSchemaDetector` during assigning lambda to the `VPC`.
+* Add lambda to the `VPC` and assign the same subnets (usually it will be **private subnets**) which are attached to the database `VPC endpoint`. Also select created security group `InnovationSprintSecurityGroupMongoSchemaDetector` during assigning lambda to the `VPC`.
 
-* In inbound rules of security group used in the DB `VPC endpoint` add entry which allows on traffic if the source is `InnovationSprintSecurityGroupMongoSchemaDetector`. Thanks to this lambda will get access to the DB `VPC endpoint`. Another option is to assign another security group to the DB `VPC endpoint` which would allow on such traffic.
+* In inbound rules of the security group used in the DB `VPC endpoint` add entry which allows on traffic if the source is `InnovationSprintSecurityGroupMongoSchemaDetector`. Thanks to this lambda will get access to the DB `VPC endpoint`. Another option is to assign another security group to the DB `VPC endpoint` which would allow on such traffic.
 
 **Because our lambda is now in the `VPC` it cannot talk to `S3` and `SecretsManager`. Additional configuration is required.**
 
-* Create VPC endpoint `InnovationSprintMongoSchemaDetectorS3` for accessing S3 by the lambda. !!!Select TBD public or private route table!!!
+* Create VPC endpoint `InnovationSprintMongoSchemaDetectorS3` for accessing S3 by the lambda. Select route table which has routes for the subnets selected in earlier steps (usually it will be **private subnets**).
 
 * Create VPC endpoint `InnovationSprintMongoSchemaDetectorSecrets` for accessing `Secrets Manager` by the lambda. Select the same subnets which are assigned to the lambda and assign security group `InnovationSprintSecurityGroupMongoSchemaDetector` (this configuration could be more strict).
 

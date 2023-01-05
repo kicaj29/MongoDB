@@ -12,6 +12,7 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector;
 public class Function
 {
     IAmazonS3 S3Client { get; set; }
+    IMongoConnectionStringProvider ConnectionStringProvider { get; set; }
 
     /// <summary>
     /// Default constructor. This constructor is used by Lambda to construct the instance. When invoked in a Lambda environment
@@ -21,15 +22,18 @@ public class Function
     public Function()
     {
         S3Client = new AmazonS3Client();
+        ConnectionStringProvider = new MongoConnectionStringProvider();
     }
 
     /// <summary>
     /// Constructs an instance with a preconfigured S3 client. This can be used for testing outside of the Lambda environment.
     /// </summary>
     /// <param name="s3Client"></param>
-    public Function(IAmazonS3 s3Client)
+    /// <param name="connectionStringProvider"></param>
+    public Function(IAmazonS3 s3Client, IMongoConnectionStringProvider connectionStringProvider)
     {
         this.S3Client = s3Client;
+        this.ConnectionStringProvider = connectionStringProvider;
     }
 
     /// <summary>
@@ -59,7 +63,7 @@ public class Function
                 using var reader = new StreamReader(file.ResponseStream);
                 var json = await reader.ReadToEndAsync();
                 QueryList? queries = JsonSerializer.Deserialize<QueryList>(json);
-                await new QueriesExecutor().RunAsync(queries!);
+                await new QueriesExecutor(ConnectionStringProvider).RunAsync(queries!);
                 context.Logger.LogInformation($"json content: {json}");
                 context.Logger.LogInformation(response.Headers.ContentType);
             }

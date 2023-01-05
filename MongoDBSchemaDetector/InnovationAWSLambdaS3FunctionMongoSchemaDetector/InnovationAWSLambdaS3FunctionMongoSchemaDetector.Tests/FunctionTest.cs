@@ -28,6 +28,11 @@ public class FunctionTest
                 ResponseStream = new FileStream("test-queries.json", FileMode.Open)
             }));
 
+        var mockMongoConnectionStringProvider = new Mock<IMongoConnectionStringProvider>();
+        mockMongoConnectionStringProvider
+            .Setup(x => x.GetConnectionStringAsync())
+            .Returns(Task.FromResult("mongodb://localhost:27017"));
+
         // Setup the S3 event object that S3 notifications would create with the fields used by the Lambda function.
         var s3Event = new S3Event
         {
@@ -51,7 +56,7 @@ public class FunctionTest
             Logger = testLambdaLogger
         };
 
-        var function = new Function(mockS3Client.Object);
+        var function = new Function(mockS3Client.Object, mockMongoConnectionStringProvider.Object);
         await function.FunctionHandler(s3Event, testLambdaContext);
 
         // Assert.Equal("text/plain", ((TestLambdaLogger)testLambdaLogger).Buffer.ToString().Trim());

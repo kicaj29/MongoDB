@@ -4,11 +4,15 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
 {
     public class QueriesExecutor
     {
+        private readonly IMongoConnectionStringProvider _connStringProvider;
+        public QueriesExecutor(IMongoConnectionStringProvider connStringProvider)
+        {
+            _connStringProvider = connStringProvider;
+        }
+
         public async Task RunAsync(QueryList queries)
         {
-            MongoUrl mongoUrl = new MongoUrl("mongodb://localhost:27017");
-            MongoClientSettings clientSettings = MongoClientSettings.FromUrl(mongoUrl);
-            MongoClient client = new MongoClient(clientSettings);
+            MongoClient client = new MongoClient(await _connStringProvider.GetConnectionStringAsync());
 
             using (IAsyncCursor<string> cursor = await client.ListDatabaseNamesAsync())
             {

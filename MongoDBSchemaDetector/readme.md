@@ -70,6 +70,8 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
 
 * Query in json file is not a json string!
 
+* All examples are in kind of json: https://www.mongodb.com/docs/manual/reference/operator/query/type/
+
 # Links
 
 https://www.mongodb.com/docs/compass/current/schema/

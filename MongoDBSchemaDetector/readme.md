@@ -83,6 +83,29 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
 ![002-vpc-create-endpoint.png](./images/002-vpc-create-endpoint.png)
 ![003-vpc-create-endpoint.png](./images/003-vpc-create-endpoint.png)
 
+# Lambda networking
+
+In case lambda has to connect to a database via its dedicated `VPC endpoint` the lambda has to be added to this `VPC` with additional configuration.
+
+* Create security group `InnovationSprintSecurityGroupMongoSchemaDetector` which accept all traffic (could be more strict to improve security) .
+
+* Add lambda to the `VPC` and assign the same subnets which are attached to the `VPC endpoint`. Also select created security group `InnovationSprintSecurityGroupMongoSchemaDetector` during assigning lambda to the `VPC`.
+
+* In inbound rules of security group used in the DB `VPC endpoint` add entry which allows on traffic if the source is `InnovationSprintSecurityGroupMongoSchemaDetector`. Thanks to this lambda will get access to the DB `VPC endpoint`. Another option is to assign another security group to the DB `VPC endpoint` which would allow on such traffic.
+
+**Because our lambda is now in the `VPC` it cannot talk to `S3` and `SecretsManager`. Additional configuration is required.**
+
+* Create VPC endpoint `InnovationSprintMongoSchemaDetectorS3` for accessing S3 by the lambda. !!!Select TBD public or private route table!!!
+
+* Create VPC endpoint `InnovationSprintMongoSchemaDetectorSecrets` for accessing `Secrets Manager` by the lambda. Select the same subnets which are assigned to the lambda and assign security group `InnovationSprintSecurityGroupMongoSchemaDetector` (this configuration could be more strict).
+
+Now our lambda should have access to all needed resources: `S3`, `Secrets Manager` and database via 3 different `VPC endpoints`.
+
+>NOTE: **When a lambda is not assign to a VPC then it can talk to other AWS services like `S3` and `SecretsManager` and creating mentioned endpoints is not needed.**
+
+
+
+
 # Links
 
 https://www.mongodb.com/docs/compass/current/schema/

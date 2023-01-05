@@ -68,6 +68,8 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
 
 * Can read logs from lambda in aws toolkit
 
+* Query in json file is not a json string!
+
 # Links
 
 https://www.mongodb.com/docs/compass/current/schema/

@@ -3,7 +3,20 @@
     {
       "CollectionName": "collection1",
       "Query": "{ID: 'b32a1626-65be-4cc1-81a8-0b6e5cea28d0'}",
-      "FriendlyName": "Exist item with ID = b32a1626-65be-4cc1-81a8-0b6e5cea28d0"
+      "FriendlyName": "Exist item with ID = b32a1626-65be-4cc1-81a8-0b6e5cea28d0",
+      "Ignore": true
+    },
+    {
+      "CollectionName": "collection1",
+      "Query": "{BatchState: {$type: 'string'}}",
+      "FriendlyName": "Exist item with BatchState field as string",
+      "Ignore": true
+    },
+    {
+      "CollectionName": "collection1",
+      "Query": "{$or: [{BatchState: {$type: 'double'}}, {BatchState: {$type: 'int'}}, {BatchState: {$type: 'long'}}, {BatchState: {$type: 'decimal'}} ]}",
+      "FriendlyName": "Exist item with BatchState field as number",
+      "Ignore": false
     }
   ]
 }

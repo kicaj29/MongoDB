@@ -20,8 +20,11 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
                         //TODO: use RunCommandAsync
                         foreach (QueryDefinition query in queries.Queries)
                         {
-                            dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>($"{{\"count\": \"{query.CollectionName}\", \"query\": {query.Query}, \"limit\": 1 }}"));
-                            bool exists = expandoResult.n >= 1;
+                            if (!query.Ignore)
+                            {
+                                dynamic expandoResult = db.RunCommand(new JsonCommand<dynamic>($"{{\"count\": \"{query.CollectionName}\", \"query\": {query.Query}, \"limit\": 1 }}"));
+                                bool exists = expandoResult.n >= 1;
+                            }
                         }
                     }
                 });

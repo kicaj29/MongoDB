@@ -16,7 +16,7 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
     {
       "eventVersion": "2.0",
       "eventSource": "aws:s3",
-      "awsRegion": "eu-central-1",
+      "awsRegion": "us-east-1",
       "eventTime": "1970-01-01T00:00:00Z",
       "eventName": "ObjectCreated:Put",
       "userIdentity": {
@@ -33,14 +33,14 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
         "s3SchemaVersion": "1.0",
         "configurationId": "testConfigRule",
         "bucket": {
-          "name": "innovation-sprint-mongo-schema-detector",
+          "name": "innovation-sprint-mongodb-schema-detector",
           "ownerIdentity": {
             "principalId": "EXAMPLE"
           },
-          "arn": "arn:aws:s3:::innovation-sprint-mongo-schema-detector"
+          "arn": "arn:aws:s3:::innovation-sprint-mongodb-schema-detector"
         },
         "object": {
-          "key": "unprocessed/queries.json",
+          "key": "input/queries.json",
           "size": 1024,
           "eTag": "0123456789abcdef0123456789abcdef",
           "sequencer": "0A1B2C3D4E5F678901"
@@ -72,6 +72,17 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
 
 * All examples are in kind of json: https://www.mongodb.com/docs/manual/reference/operator/query/type/
 
+* IAM role used by lambda
+
+* 3 new network interfaces has been created with type lambda
+
+* Create VPC endpoint (only then lambda which is in a VPC can access S3)
+
+* Run command was working locally without problems, problems were in Atlas
+
+![002-vpc-create-endpoint.png](./images/002-vpc-create-endpoint.png)
+![003-vpc-create-endpoint.png](./images/003-vpc-create-endpoint.png)
+
 # Links
 
 https://www.mongodb.com/docs/compass/current/schema/
@@ -89,3 +100,12 @@ https://www.rahulpnath.com/blog/amazon-s3-lambda-triggers-dotnet/
 https://www.youtube.com/watch?v=pqqyDGmaVP8
 
 https://stackoverflow.com/questions/51252665/error-making-request-with-error-code-movedpermanently-and-http-status-code-moved
+
+Access S3 from lambda within VPC using VPC Endpoint - Lambda with EFS
+https://www.youtube.com/watch?v=dbD7_QwQXHo
+
+https://jira.mongodb.org/browse/CSHARP-2668
+https://jira.mongodb.org/browse/CSHARP-2271
+
+
+https://stackoverflow.com/questions/30421379/mongodb-custom-collection-serializer

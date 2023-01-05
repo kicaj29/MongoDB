@@ -1,6 +1,7 @@
 ﻿using Amazon;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
+using System.Text.Json;
 
 namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
 {
@@ -15,13 +16,31 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
             };
 
             AmazonSecretsManagerClient client = new AmazonSecretsManagerClient(secretsManagerConfig);
-            GetSecretValueResponse secretResponse = await client.GetSecretValueAsync(new GetSecretValueRequest()
+            GetSecretValueResponse userSecretResponse = await client.GetSecretValueAsync(new GetSecretValueRequest()
             {
                 SecretId = "/hxc_platform/storage/username",
                 VersionStage = "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
             });
 
-            return secretResponse.SecretString;
+            GetSecretValueResponse passwordSecretResponse = await client.GetSecretValueAsync(new GetSecretValueRequest()
+            {
+                SecretId = "/hxc_platform/storage/password",
+                VersionStage = "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
+            });
+
+            JsonElement jsonElementKeyValueUser = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(userSecretResponse.SecretString, new JsonSerializerOptions()
+            {
+                MaxDepth = 1
+            });
+            string userName = jsonElementKeyValueUser.GetProperty("username").ToString();
+
+            JsonElement jsonElementKeyValuePassword = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(passwordSecretResponse.SecretString, new JsonSerializerOptions()
+            {
+                MaxDepth = 1
+            });
+            string password = jsonElementKeyValuePassword.GetProperty("password").ToString();
+
+            return $"mongodb+srv://{userName}:{password}@cluster-sandbox-pl-0.c4b9l.mongodb.net/test";
         }
     }
 }

@@ -57,15 +57,14 @@ public class Function
 
             try
             {
-                context.Logger.LogInformation("Started processing S3 event...");
+                context.Logger.LogInformation("Starting processing S3 event.");
                 var response = await this.S3Client.GetObjectMetadataAsync(s3Event.Bucket.Name, s3Event.Object.Key);
                 var file = await this.S3Client.GetObjectAsync(s3Event.Bucket.Name, s3Event.Object.Key);
                 using var reader = new StreamReader(file.ResponseStream);
                 var json = await reader.ReadToEndAsync();
                 QueryList? queries = JsonSerializer.Deserialize<QueryList>(json);
                 await new QueriesExecutor(ConnectionStringProvider, context.Logger).RunAsync(queries!);
-                context.Logger.LogInformation($"json content: {json}");
-                context.Logger.LogInformation(response.Headers.ContentType);
+                context.Logger.LogInformation("Finished processing S3 event.");
             }
             catch (Exception e)
             {

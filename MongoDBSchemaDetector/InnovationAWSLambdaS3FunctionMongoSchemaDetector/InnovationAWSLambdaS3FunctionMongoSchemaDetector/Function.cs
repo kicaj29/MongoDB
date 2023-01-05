@@ -2,6 +2,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.S3Events;
 using Amazon.S3;
 using Amazon.S3.Util;
+using System.Text.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -57,6 +58,8 @@ public class Function
                 var file = await this.S3Client.GetObjectAsync(s3Event.Bucket.Name, s3Event.Object.Key);
                 using var reader = new StreamReader(file.ResponseStream);
                 var json = await reader.ReadToEndAsync();
+                QueryList? queries = JsonSerializer.Deserialize<QueryList>(json);
+                await new QueriesExecutor().RunAsync(queries!);
                 context.Logger.LogInformation($"json content: {json}");
                 context.Logger.LogInformation(response.Headers.ContentType);
             }

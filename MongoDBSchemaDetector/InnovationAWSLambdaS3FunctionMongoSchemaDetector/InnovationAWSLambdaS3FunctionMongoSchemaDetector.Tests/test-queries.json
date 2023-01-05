@@ -1,0 +1,9 @@
+{
+  "Queries": [
+    {
+      "CollectionName": "collection1",
+      "Query": "{ID: 'b32a1626-65be-4cc1-81a8-0b6e5cea28d0'}",
+      "FriendlyName": "Exist item with ID = b32a1626-65be-4cc1-81a8-0b6e5cea28d0"
+    }
+  ]
+}

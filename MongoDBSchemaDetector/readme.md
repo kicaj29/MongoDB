@@ -97,7 +97,7 @@ In case lambda has to connect to a database via its dedicated `VPC endpoint` the
 
 * Create VPC endpoint `InnovationSprintMongoSchemaDetectorS3` for accessing S3 by the lambda. Select route table which has routes for the subnets selected in earlier steps (usually it will be **private subnets**).
 
-* Create VPC endpoint `InnovationSprintMongoSchemaDetectorSecrets` for accessing `Secrets Manager` by the lambda. Select the same subnets which are assigned to the lambda and assign security group `InnovationSprintSecurityGroupMongoSchemaDetector` (this configuration could be more strict).
+* Create VPC endpoint `InnovationSprintMongoSchemaDetectorSecrets` for accessing `Secrets Manager` by the lambda. Select the same subnets which are assigned to the lambda and assign security group `InnovationSprintSecurityGroupMongoSchemaDetector` (this security group configuration could be more strict).
 
 Now our lambda should have access to all needed resources: `S3`, `Secrets Manager` and database via 3 different `VPC endpoints`.
 

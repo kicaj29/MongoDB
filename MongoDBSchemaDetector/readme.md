@@ -40,7 +40,7 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
           "arn": "arn:aws:s3:::innovation-sprint-mongo-schema-detector"
         },
         "object": {
-          "key": "unprocessed/test3.json",
+          "key": "unprocessed/queries.json",
           "size": 1024,
           "eTag": "0123456789abcdef0123456789abcdef",
           "sequencer": "0A1B2C3D4E5F678901"

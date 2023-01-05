@@ -1,18 +1,25 @@
-﻿using MongoDB.Driver;
+﻿using Amazon.Lambda.Core;
+using MongoDB.Driver;
 
 namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
 {
     public class QueriesExecutor
     {
         private readonly IMongoConnectionStringProvider _connStringProvider;
-        public QueriesExecutor(IMongoConnectionStringProvider connStringProvider)
+        private readonly ILambdaLogger _logger;
+
+        public QueriesExecutor(IMongoConnectionStringProvider connStringProvider, ILambdaLogger logger)
         {
             _connStringProvider = connStringProvider;
+            _logger = logger;
         }
 
         public async Task RunAsync(QueryList queries)
         {
-            MongoClient client = new MongoClient(await _connStringProvider.GetConnectionStringAsync());
+            string connectiongString = await _connStringProvider.GetConnectionStringAsync();
+            _logger.LogInformation($"Retrieved connection string: {connectiongString}");
+
+            /*MongoClient client = new MongoClient(connectiongString);
 
             using (IAsyncCursor<string> cursor = await client.ListDatabaseNamesAsync())
             {
@@ -32,7 +39,7 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
                         }
                     }
                 });
-            }
+            }*/
         }
     }
 }

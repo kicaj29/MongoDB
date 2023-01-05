@@ -63,7 +63,7 @@ public class Function
                 using var reader = new StreamReader(file.ResponseStream);
                 var json = await reader.ReadToEndAsync();
                 QueryList? queries = JsonSerializer.Deserialize<QueryList>(json);
-                await new QueriesExecutor(ConnectionStringProvider).RunAsync(queries!);
+                await new QueriesExecutor(ConnectionStringProvider, context.Logger).RunAsync(queries!);
                 context.Logger.LogInformation($"json content: {json}");
                 context.Logger.LogInformation(response.Headers.ContentType);
             }

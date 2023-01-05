@@ -25,7 +25,7 @@ public class FunctionTest
             .Setup(x => x.GetObjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(new GetObjectResponse()
             {
-                ResponseStream = new FileStream("test-queries.json", FileMode.Open)
+                ResponseStream = new FileStream("queries.json", FileMode.Open)
             }));
 
         var mockMongoConnectionStringProvider = new Mock<IMongoConnectionStringProvider>();

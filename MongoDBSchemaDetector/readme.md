@@ -89,7 +89,7 @@ In case lambda has to connect to a database via its dedicated `VPC endpoint` the
 
 * Create security group `InnovationSprintSecurityGroupMongoSchemaDetector` which accept all traffic (could be more strict to improve security) .
 
-* Add lambda to the `VPC` and assign the same subnets which are attached to the `VPC endpoint`. Also select created security group `InnovationSprintSecurityGroupMongoSchemaDetector` during assigning lambda to the `VPC`.
+* Add lambda to the `VPC` and assign the same subnets which are attached to the database `VPC endpoint`. Also select created security group `InnovationSprintSecurityGroupMongoSchemaDetector` during assigning lambda to the `VPC`.
 
 * In inbound rules of security group used in the DB `VPC endpoint` add entry which allows on traffic if the source is `InnovationSprintSecurityGroupMongoSchemaDetector`. Thanks to this lambda will get access to the DB `VPC endpoint`. Another option is to assign another security group to the DB `VPC endpoint` which would allow on such traffic.
 

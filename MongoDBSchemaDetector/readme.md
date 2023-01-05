@@ -83,15 +83,60 @@ Make sure that `awsRegion`, `s3.bucket.name`, `s3.object.key`, `s3.bucket.arn` h
 ![002-vpc-create-endpoint.png](./images/002-vpc-create-endpoint.png)
 ![003-vpc-create-endpoint.png](./images/003-vpc-create-endpoint.png)
 
+# Lambda permissions
+
+The following policies must be assigned to the IAM role `InnovationSprintMongoSchemaDetectorRole` used by the lambda.
+
+* `AmazonVPCCrossAccountNetworkInterfaceOperations` (maybe enough would be inline policy with `ec2:CreateNetworkInterface`).
+* `AWSLambdaBasicExecutionRole` - it gives access to the `CloudWatch`.
+* Inline policy for accessing selected keys from the `SecretsManager`
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowReadStorageSecrets",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:ListSecretVersionIds",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:DescribeSecret"
+            ],
+            "Resource": [
+                "arn:aws:secretsmanager:us-east-1:[999999999999]:secret:/test_platform/storage/username-[11111]",
+                "arn:aws:secretsmanager:us-east-1:[999999999999]:secret:/test_platform/storage/password-[222222]"
+            ]
+        }
+    ]
+  }
+  ```
+* Inline policy for accessing selected `S3` buckets.
+  ```json
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::innovation-sprint-mongodb-schema-detector/*"
+        }
+    ]
+  }
+  ```
+
 # Lambda networking
 
 In case lambda has to connect to a database via its dedicated `VPC endpoint` the lambda has to be added to this `VPC` with additional configuration.
 
-* Create security group `InnovationSprintSecurityGroupMongoSchemaDetector` which accept all traffic (could be more strict to improve security) .
+* Create security group `InnovationSprintSecurityGroupMongoSchemaDetector` which accept all traffic (could be more strict to improve security).
 
 * Add lambda to the `VPC` and assign the same subnets (usually it will be **private subnets**) which are attached to the database `VPC endpoint`. Also select created security group `InnovationSprintSecurityGroupMongoSchemaDetector` during assigning lambda to the `VPC`.
 
 * In inbound rules of the security group used in the DB `VPC endpoint` add entry which allows on traffic if the source is `InnovationSprintSecurityGroupMongoSchemaDetector`. Thanks to this lambda will get access to the DB `VPC endpoint`. Another option is to assign another security group to the DB `VPC endpoint` which would allow on such traffic.
+
+* During assigning lambda to the VPC 3 new network interfaces will be created with `interface type` set on `Lambda`. This interfaces are used in communication between lambda and other recourses in the VPC.
 
 **Because our lambda is now in the `VPC` it cannot talk to `S3` and `SecretsManager`. Additional configuration is required.**
 
@@ -104,7 +149,9 @@ Now our lambda should have access to all needed resources: `S3`, `Secrets Manage
 >NOTE: **When a lambda is not assign to a VPC then it can talk to other AWS services like `S3` and `SecretsManager` and creating mentioned endpoints is not needed.**
 
 
+# Cleanup
 
+* Remove 
 
 # Links
 

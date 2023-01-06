@@ -8,15 +8,15 @@
     },
     {
       "CollectionName": "orchestrationBatch",
-      "Query": "{BatchState: {$type: 'string'}}",
-      "FriendlyName": "Exist item with BatchState field as string.",
-      "Ignore": true
+      "Query": "{\"Documents.Actions.ActionType\": {$type: 'string'}}",
+      "FriendlyName": "Exist item with ActionType field as string.",
+      "Ignore": false
     },
     {
       "CollectionName": "orchestrationBatch",
-      "Query": "{$or: [{BatchState: {$type: 'double'}}, {BatchState: {$type: 'int'}}, {BatchState: {$type: 'long'}}, {BatchState: {$type: 'decimal'}} ]}",
-      "FriendlyName": "Exist item with BatchState field as number",
-      "Ignore": true
+      "Query": "{$or: [{\"Documents.Actions.ActionType\": {$type: 'double'}}, {\"Documents.Actions.ActionType\": {$type: 'int'}}, {\"Documents.Actions.ActionType\": {$type: 'long'}}, {\"Documents.Actions.ActionType\": {$type: 'decimal'}} ]}",
+      "FriendlyName": "Exist item with ActionType field as number",
+      "Ignore": false
     }
   ]
 }

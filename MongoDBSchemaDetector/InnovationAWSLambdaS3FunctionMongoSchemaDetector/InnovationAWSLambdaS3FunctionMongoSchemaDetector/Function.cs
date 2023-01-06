@@ -2,6 +2,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.S3Events;
 using Amazon.S3;
 using Amazon.S3.Util;
+using System.Text;
 using System.Text.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -63,7 +64,15 @@ public class Function
                 using var reader = new StreamReader(file.ResponseStream);
                 var json = await reader.ReadToEndAsync();
                 QueryList? queries = JsonSerializer.Deserialize<QueryList>(json);
-                await new QueriesExecutor(ConnectionStringProvider, context.Logger).RunAsync(queries!);
+                Report report = await new QueriesExecutor(ConnectionStringProvider, context.Logger).RunAsync(queries!);
+
+                string reportJson = JsonSerializer.Serialize(report);
+                Byte[] reportBytes = UTF8Encoding.UTF8.GetBytes(reportJson);
+                using (MemoryStream reportStream = new MemoryStream(reportBytes))
+                {
+                    // TODO: create unique name of the file
+                    await this.S3Client.UploadObjectFromStreamAsync(s3Event.Bucket.Name, $"output/report.json", reportStream, new Dictionary<string, object>());
+                }
                 context.Logger.LogInformation("Finished processing S3 event.");
             }
             catch (Exception e)

@@ -26,8 +26,10 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
             _logger = logger;
         }
 
-        public async Task RunAsync(QueryList queries)
+        public async Task<Report> RunAsync(QueryList queries)
         {
+            Report report = new Report();
+
             _logger.LogInformation($"There are {queries.Queries.Count(q => !q.Ignore)} queries which will be processed.");
 
             _logger.LogInformation("Retrieving connection string.");
@@ -52,11 +54,18 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
                         {
                             if (!query.Ignore)
                             {
-                                // TODO: stop processing query after first finding!
-                                _logger.LogInformation($"Executing query {query.Query} for collection {query.CollectionName}.");
-                                RunCommandResult runCommandResult = db.RunCommand(new JsonCommand<RunCommandResult>($"{{\"count\": \"{query.CollectionName}\", \"query\": {query.Query}, \"limit\": 1 }}"));
-                                bool exists = runCommandResult.n >= 1;
-                                _logger.LogInformation($"Query {query.Query} result is: {exists}.");
+                                if (!report.Items.Any(item => string.Equals(item.Query, query.Query, StringComparison.Ordinal)))
+                                {
+                                    // TODO: stop processing query after first finding!
+                                    _logger.LogInformation($"Executing query {query.Query} for collection {query.CollectionName}.");
+                                    RunCommandResult runCommandResult = db.RunCommand(new JsonCommand<RunCommandResult>($"{{\"count\": \"{query.CollectionName}\", \"query\": {query.Query}, \"limit\": 1 }}"));
+                                    _logger.LogInformation($"Query {query.Query} result is: {runCommandResult}.");
+                                    bool exists = runCommandResult.n >= 1;
+                                    if (exists)
+                                    {
+                                        report.Items.Add(new ReportItem(true, query.CollectionName, query.Query, query.FriendlyName));
+                                    }
+                                }
                             }
                             else
                             {
@@ -69,7 +78,16 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
                         _logger.LogInformation($"Skipping DB because its name does not start from 'CAP_'");
                     }
                 }
+                // add not ignored queries which returned count 0
+                foreach (QueryDefinition query in queries.Queries)
+                {
+                    if ((!query.Ignore) && (!report.Items.Any(item => string.Equals(item.Query, query.Query, StringComparison.Ordinal))))
+                    {
+                        report.Items.Add(new ReportItem(false, query.CollectionName, query.Query, query.FriendlyName));
+                    }
+                }
             }
+            return report;
         }
     }
 }

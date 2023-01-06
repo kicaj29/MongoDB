@@ -119,7 +119,10 @@ The following policies must be assigned to the IAM role `InnovationSprintMongoSc
         {
             "Sid": "VisualEditor0",
             "Effect": "Allow",
-            "Action": "s3:GetObject",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
             "Resource": "arn:aws:s3:::innovation-sprint-mongodb-schema-detector/*"
         }
     ]

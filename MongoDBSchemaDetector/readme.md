@@ -183,6 +183,12 @@ so if you run "terraform plan" Terraform will not see any existing state
 for this configuration.
 ```
 
+## Destroying selected resources
+
+```
+terraform destroy -target="aws_s3_bucket_object.bucket-input"
+```
+
 # Cleanup
 
 * Remove 

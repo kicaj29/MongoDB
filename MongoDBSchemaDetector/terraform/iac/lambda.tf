@@ -16,7 +16,6 @@ resource "aws_lambda_function" "schema_detector_lambda" {
   ]
 }
 
-
 resource "aws_lambda_permission" "allow_trigger_by_s3_bucket" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"

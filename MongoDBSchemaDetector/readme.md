@@ -151,6 +151,25 @@ Now our lambda should have access to all needed resources: `S3`, `Secrets Manage
 
 >NOTE: **When a lambda is not assign to a VPC then it can talk to other AWS services like `S3` and `SecretsManager` and creating mentioned endpoints is not needed.**
 
+# Terraform
+
+# Backend
+
+```
+PS D:\GitHub\kicaj29\MongoDB\MongoDBSchemaDetector\terraform\backend> terraform apply state.tfplan
+aws_dynamodb_table.terraform_statelock: Creating...
+aws_s3_bucket.bucket: Creating...
+aws_dynamodb_table.terraform_statelock: Creation complete after 9s [id=innovation-sprint-terraform-state-table]
+aws_s3_bucket.bucket: Still creating... [10s elapsed]
+aws_s3_bucket.bucket: Creation complete after 10s [id=innovation-sprint-terraform-state]
+aws_s3_bucket_public_access_block.bucket-no-public-access: Creating...
+aws_s3_bucket_acl.bucket-acl: Creating...
+aws_s3_bucket_versioning.bucket-with-versioning: Creating...
+aws_s3_bucket_acl.bucket-acl: Creation complete after 2s [id=innovation-sprint-terraform-state,private]
+aws_s3_bucket_public_access_block.bucket-no-public-access: Creation complete after 2s [id=innovation-sprint-terraform-state]
+aws_s3_bucket_versioning.bucket-with-versioning: Creation complete after 4s [id=innovation-sprint-terraform-state]
+```
+
 
 # Cleanup
 

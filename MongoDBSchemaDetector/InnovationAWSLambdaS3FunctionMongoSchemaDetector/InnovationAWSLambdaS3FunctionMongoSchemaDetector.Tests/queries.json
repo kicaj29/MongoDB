@@ -2,8 +2,8 @@
   "Queries": [
     {
       "CollectionName": "orchestrationBatch",
-      "Query": "{ID: 'e9cfd529-0cd6-4552-ad2b-c6ef19959630'}",
-      "FriendlyName": "Exist item with ID = e9cfd529-0cd6-4552-ad2b-c6ef19959630",
+      "Query": "{ID: 'e9cfd529-0cd6-4552-ad2b-c6ef19959622'}",
+      "FriendlyName": "Exist item with ID = e9cfd529-0cd6-4552-ad2b-c6ef19959622",
       "Ignore": false
     },
     {
@@ -16,6 +16,12 @@
       "CollectionName": "orchestrationBatch",
       "Query": "{$or: [{\"Documents.Actions.ActionType\": {$type: 'double'}}, {\"Documents.Actions.ActionType\": {$type: 'int'}}, {\"Documents.Actions.ActionType\": {$type: 'long'}}, {\"Documents.Actions.ActionType\": {$type: 'decimal'}} ]}",
       "FriendlyName": "Exist item with ActionType field as number",
+      "Ignore": false
+    },
+    {
+      "CollectionName": "orchestrationBatch",
+      "Query": "{$and: [{CreationDate: {$exists: false}}, {ProcessFlow: {$exists: false}}, {BatchState: {$exists: false}}, {ContentQueueID: {$exists: false}}, {Documents: {$exists: false}} ]}",
+      "FriendlyName": "Exist old orch. batch schema",
       "Ignore": false
     }
   ]

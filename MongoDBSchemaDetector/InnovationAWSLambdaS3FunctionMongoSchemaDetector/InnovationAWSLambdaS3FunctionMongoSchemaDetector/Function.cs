@@ -1,7 +1,6 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.S3Events;
 using Amazon.S3;
-using Amazon.S3.Util;
 using System.Text;
 using System.Text.Json;
 
@@ -59,14 +58,18 @@ public class Function
             try
             {
                 context.Logger.LogInformation("Starting processing S3 event.");
-                var response = await this.S3Client.GetObjectMetadataAsync(s3Event.Bucket.Name, s3Event.Object.Key);
                 var file = await this.S3Client.GetObjectAsync(s3Event.Bucket.Name, s3Event.Object.Key);
                 using var reader = new StreamReader(file.ResponseStream);
                 var json = await reader.ReadToEndAsync();
                 QueryList? queries = JsonSerializer.Deserialize<QueryList>(json);
                 Report report = await new QueriesExecutor(ConnectionStringProvider, context.Logger).RunAsync(queries!);
 
-                string reportJson = JsonSerializer.Serialize(report);
+                // https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/character-encoding
+                // https://stackoverflow.com/questions/58003293/dotnet-core-system-text-json-unescape-unicode-string
+                string reportJson = JsonSerializer.Serialize(report, new JsonSerializerOptions()
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                });
                 Byte[] reportBytes = UTF8Encoding.UTF8.GetBytes(reportJson);
                 using (MemoryStream reportStream = new MemoryStream(reportBytes))
                 {

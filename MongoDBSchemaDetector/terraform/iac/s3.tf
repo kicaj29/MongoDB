@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "bucket" {
-  bucket = "innovation-sprint-mongodb-schema-detector-tf"
+  bucket = var.s3_bucket_name
 }
 
 // https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl
@@ -24,12 +24,12 @@ resource "aws_s3_bucket_public_access_block" "bucket-no-public-access" {
 // status code: 404, request id: KXSDCNM5R2XYV223, host id: DEymz7J2jIQXhhRH91kuZbV3uVLTkMc1Vb10m/jJ2fsGRR6BRCzfIZbBGMNQ5N8+qwqkbyDO8pM= 
 resource "aws_s3_bucket_object" "bucket-input" {
   depends_on = [aws_s3_bucket.bucket] // TODO: did not test for the single run that creates everything
-  bucket = "innovation-sprint-mongodb-schema-detector-tf"
+  bucket = var.s3_bucket_name
   key    = "input"
 }
 
 resource "aws_s3_bucket_object" "bucket-output" {
   depends_on = [aws_s3_bucket.bucket] // TODO: did not test for the single run that creates everything    
-  bucket = "innovation-sprint-mongodb-schema-detector-tf"
+  bucket = var.s3_bucket_name
   key    = "output"
 }

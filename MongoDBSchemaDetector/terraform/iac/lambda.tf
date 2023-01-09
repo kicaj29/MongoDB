@@ -10,6 +10,7 @@ resource "aws_lambda_function" "schema_detector_lambda" {
   runtime       = "dotnet6"
   filename      = "../../InnovationAWSLambdaS3FunctionMongoSchemaDetector/InnovationAWSLambdaS3FunctionMongoSchemaDetector/bin/Release/net6.0/InnovationAWSLambdaS3FunctionMongoSchemaDetector.zip"
   source_code_hash = filebase64sha256("../../InnovationAWSLambdaS3FunctionMongoSchemaDetector/InnovationAWSLambdaS3FunctionMongoSchemaDetector/bin/Release/net6.0/InnovationAWSLambdaS3FunctionMongoSchemaDetector.zip")
+  timeout       =  30
 
   depends_on = [
     aws_cloudwatch_log_group.lambda_cloudwatch_group,

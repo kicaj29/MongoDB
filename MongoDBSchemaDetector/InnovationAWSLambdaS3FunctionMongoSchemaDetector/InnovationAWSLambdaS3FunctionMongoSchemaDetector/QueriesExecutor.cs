@@ -12,7 +12,6 @@ namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector
 
         static QueriesExecutor()
         {
-            // MongoDB.Bson.Serialization.BsonSerializer.RegisterSerializer(typeof(RunCommandResult), new RunCommandResultSerializer());
             BsonClassMap.RegisterClassMap<RunCommandResult>(p =>
             {
                 p.AutoMap();

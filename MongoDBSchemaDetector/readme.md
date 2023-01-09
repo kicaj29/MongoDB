@@ -153,7 +153,7 @@ Now our lambda should have access to all needed resources: `S3`, `Secrets Manage
 
 # Terraform
 
-# Backend
+## Backend
 
 ```
 PS D:\GitHub\kicaj29\MongoDB\MongoDBSchemaDetector\terraform\backend> terraform apply state.tfplan
@@ -170,6 +170,18 @@ aws_s3_bucket_public_access_block.bucket-no-public-access: Creation complete aft
 aws_s3_bucket_versioning.bucket-with-versioning: Creation complete after 4s [id=innovation-sprint-terraform-state]
 ```
 
+## IaC
+
+* Used workspace
+
+```
+PS D:\GitHub\kicaj29\MongoDB\MongoDBSchemaDetector\terraform\iac> terraform workspace new demo1-lambda
+Created and switched to workspace "demo1-lambda"!
+
+You're now on a new, empty workspace. Workspaces isolate their state,
+so if you run "terraform plan" Terraform will not see any existing state
+for this configuration.
+```
 
 # Cleanup
 
@@ -201,3 +213,6 @@ https://jira.mongodb.org/browse/CSHARP-2271
 
 
 https://stackoverflow.com/questions/30421379/mongodb-custom-collection-serializer
+
+
+https://stackoverflow.com/questions/68428733/terraform-getting-error-when-configuring-s3-backend

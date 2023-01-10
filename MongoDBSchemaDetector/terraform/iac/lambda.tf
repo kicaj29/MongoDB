@@ -3,6 +3,7 @@ resource "aws_cloudwatch_log_group" "lambda_cloudwatch_group" {
   retention_in_days = 14
 }
 
+// https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function
 resource "aws_lambda_function" "schema_detector_lambda" {
   function_name = var.lambda_name
   role          = aws_iam_role.lambda_role.arn
@@ -11,6 +12,11 @@ resource "aws_lambda_function" "schema_detector_lambda" {
   filename      = "../../InnovationAWSLambdaS3FunctionMongoSchemaDetector/InnovationAWSLambdaS3FunctionMongoSchemaDetector/bin/Release/net6.0/InnovationAWSLambdaS3FunctionMongoSchemaDetector.zip"
   source_code_hash = filebase64sha256("../../InnovationAWSLambdaS3FunctionMongoSchemaDetector/InnovationAWSLambdaS3FunctionMongoSchemaDetector/bin/Release/net6.0/InnovationAWSLambdaS3FunctionMongoSchemaDetector.zip")
   timeout       =  30
+  vpc_config {
+    security_group_ids = [aws_security_group.lambda_security_group.id]
+    subnet_ids         = [data.aws_subnet.subnet_1a.id, data.aws_subnet.subnet_1b.id, data.aws_subnet.subnet_1c.id]
+  }
+
 
   depends_on = [
     aws_cloudwatch_log_group.lambda_cloudwatch_group,

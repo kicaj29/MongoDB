@@ -1,10 +1,4 @@
 // https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
-
-data "aws_iam_policy" "policy-ready-storage-secrets" {
-  // arn worked only in the account id was in the arn
-  name = "hxc-read-storage-secrets"
-}
-
 resource "aws_iam_role" "lambda_role" {
   name = "InnovationSprintMongoSchemaDetectorRoleTF"
 

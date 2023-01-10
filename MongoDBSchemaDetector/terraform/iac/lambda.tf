@@ -23,12 +23,15 @@ resource "aws_lambda_function" "schema_detector_lambda" {
   ]
 }
 
+// https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission
 resource "aws_lambda_permission" "allow_trigger_by_s3_bucket" {
-  statement_id  = "AllowExecutionFromS3Bucket"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.schema_detector_lambda.arn
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.bucket.arn
+  statement_id    = "AllowExecutionFromS3Bucket"
+  action          = "lambda:InvokeFunction"
+  function_name   = aws_lambda_function.schema_detector_lambda.arn
+  principal       = "s3.amazonaws.com"
+  source_arn      = aws_s3_bucket.bucket.arn
+  // https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html#lambda-1-remediation
+  source_account  = data.aws_caller_identity.current.account_id
 }
 
 resource "aws_s3_bucket_notification" "schema_detector_lambda_bucket_notification" {

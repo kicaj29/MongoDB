@@ -39,3 +39,8 @@ data "aws_subnet" "subnet_1c" {
 data "aws_security_group" "lambda_security_group_manually_created" {
   name = "InnovationSprintSecurityGroupMongoSchemaDetector"
 }
+
+// https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity
+data "aws_caller_identity" "current" {
+  
+}

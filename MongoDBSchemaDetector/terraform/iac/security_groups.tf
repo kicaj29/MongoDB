@@ -5,7 +5,7 @@ resource "aws_security_group" "lambda_security_group" {
   description = "Security group for lambda schema detector"
   vpc_id      = data.aws_vpc.lambda_vpc.id
 
-  // because this lambda is only triggered by S3 we prohibit any incomming traffic via ENI, this can be done because S3 does not use ENI
+  // because this lambda is only triggered by S3 we prohibit any incomming traffic via ENI, this can be done because S3 does not use ENI to trigger the lamdba
   // no ingress means there are no rules and no rules means that all traffic via ENI is blocked 
   // https://github.com/hashicorp/terraform-provider-aws/issues/4399
   ingress = []

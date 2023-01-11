@@ -18,6 +18,9 @@
     <ProjectReference Include="..\InnovationAWSLambdaS3FunctionMongoSchemaDetector\InnovationAWSLambdaS3FunctionMongoSchemaDetector.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="expected-results.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="queries.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -68,7 +68,8 @@ public class Function
                 // https://stackoverflow.com/questions/58003293/dotnet-core-system-text-json-unescape-unicode-string
                 string reportJson = JsonSerializer.Serialize(report, new JsonSerializerOptions()
                 {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                    WriteIndented = true
                 });
                 Byte[] reportBytes = UTF8Encoding.UTF8.GetBytes(reportJson);
                 using (MemoryStream reportStream = new MemoryStream(reportBytes))

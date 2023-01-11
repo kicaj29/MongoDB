@@ -4,6 +4,7 @@ using Amazon.Lambda.TestUtilities;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Moq;
+using System.Text.Json;
 using Xunit;
 
 namespace InnovationAWSLambdaS3FunctionMongoSchemaDetector.Tests;
@@ -13,9 +14,19 @@ public class FunctionTest
     [Fact]
     public async Task TestS3EventLambdaFunction()
     {
+        // Arrange
         var mockS3Client = new Mock<IAmazonS3>();
         var getObjectMetadataResponse = new GetObjectMetadataResponse();
         getObjectMetadataResponse.Headers.ContentType = "text/plain";
+
+        string expectedResultString = File.ReadAllText("expected-results.json");
+        Report expectedResult = JsonSerializer.Deserialize<Report>(expectedResultString, new JsonSerializerOptions()
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        })!;
+
+        // This is set in the callback method.
+        Report actualResult = null!;
 
         mockS3Client
             .Setup(x => x.GetObjectMetadataAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -27,6 +38,20 @@ public class FunctionTest
             {
                 ResponseStream = new FileStream("queries.json", FileMode.Open)
             }));
+
+        mockS3Client
+            .Setup(x => x.UploadObjectFromStreamAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<IDictionary<string, object>>(), It.IsAny<CancellationToken>()))
+            .Callback((string bucketName, string objectKey, Stream stream, IDictionary<string, object> props, CancellationToken cancellationToken) =>
+            {
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    string json = reader.ReadToEnd();
+                    actualResult = JsonSerializer.Deserialize<Report>(json, new JsonSerializerOptions()
+                    {
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    })!;
+                }
+            });
 
         var mockMongoConnectionStringProvider = new Mock<IMongoConnectionStringProvider>();
         mockMongoConnectionStringProvider
@@ -49,16 +74,20 @@ public class FunctionTest
             }
         };
 
-        // Invoke the lambda function and confirm the content type was returned.
         ILambdaLogger testLambdaLogger = new TestLambdaLogger();
         var testLambdaContext = new TestLambdaContext
         {
             Logger = testLambdaLogger
         };
 
+        // TODO: populate MongoDB with some data...
+
+        // Act
         var function = new Function(mockS3Client.Object, mockMongoConnectionStringProvider.Object);
         await function.FunctionHandler(s3Event, testLambdaContext);
 
-        // Assert.Equal("text/plain", ((TestLambdaLogger)testLambdaLogger).Buffer.ToString().Trim());
+
+        // Assert
+        Assert.Equivalent(expectedResult, actualResult);
     }
 }

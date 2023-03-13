@@ -72,6 +72,8 @@
   - [Question 5](#question-5)
   - [Question 6](#question-6)
   - [Question 7](#question-7)
+- [Additional information](#additional-information)
+  - [Unique index on array of strings field](#unique-index-on-array-of-strings-field)
 # Chapter 01: Introduction
 
 * Memory
@@ -1874,3 +1876,42 @@ db.products.find({ categories: 'Beauty' }).sort({ price: 1 })
   TRUE
 
 
+# Additional information
+
+## Unique index on array of strings field
+
+* Index on single field
+  ```
+  db.verification_actionstatuses.insertOne({
+    DocumentIds: ["doc1", "doc2"],
+  });
+
+  db.verification_actionstatuses.createIndex({ DocumentIds: 1 }, { unique: true })
+
+  // this will faile because of E11000 duplicate key error collection
+  db.verification_actionstatuses.insertOne({
+    DocumentIds: ["doc1"],
+  });
+  ```
+
+* Multi-key index
+  ```
+  db.verification_actionstatuses.insertOne({
+    BatchId: 1,
+    DocumentIds: ["doc1", "doc2"],
+  });
+
+  db.verification_actionstatuses.createIndex({ BatchId: 1, DocumentIds: 1 }, { unique: true })
+
+  // this will pass because such combination does not exist
+  db.verification_actionstatuses.insertOne({
+    BatchId: 2,    
+    DocumentIds: ["doc1"],
+  });
+
+  // E11000 duplicate key error collection
+  db.verification_actionstatuses.insertOne({
+    BatchId: 2,    
+    DocumentIds: ["doc1"],
+  });
+  ```

@@ -9,7 +9,7 @@ namespace AspNetCoreWebApiMongoDB.Models
     public class Country
     {
         [BsonId]
-        public MongoDB.Bson.ObjectId _id { get; set; }
+        public MongoDB.Bson.ObjectId MyId { get; set; }
 
         public string CountryId { get; set; }
         public string CountryName { get; set; }

@@ -36,7 +36,7 @@ namespace ApiUsageExamples.Tests
 
             // Act
 
-            int maxCounter = 100;
+            int maxCounter = 500;
             Task[] allTasks = new Task[maxCounter];
 
             for (int index = 0; index < maxCounter; index++)
@@ -50,6 +50,7 @@ namespace ApiUsageExamples.Tests
 
         private async Task TryUpdateBatch(int currentCounterValue, Batch batch)
         {
+            await Task.Delay(100);
             Console.WriteLine($"Starting task with current counter value {currentCounterValue}.");
             var collection = DB.GetCollection<Batch>("Batches");
             FilterDefinition<Batch> filter = Builders<Batch>.Filter.Eq(p => p.ID, batch.ID);
@@ -93,21 +94,21 @@ namespace ApiUsageExamples.Tests
                        ArrayFilters = arrayFilters
                    });
 
-                success = updateBatch.Documents[0].Actions[0].StatusProgressCounter == nextCounterValue;
+                success = updateBatch.Documents[1].Actions[0].StatusProgressCounter == nextCounterValue;
                 if (success)
                     break;
 
-                bool counterValueExceeded = updateBatch.Documents[0].Actions[0].StatusProgressCounter > nextCounterValue;
+                bool counterValueExceeded = updateBatch.Documents[1].Actions[0].StatusProgressCounter > nextCounterValue;
                 if (counterValueExceeded)
                 {
-                    Assert.Fail($"Expected counter value: {nextCounterValue}, actual counter value: {updateBatch.Documents[0].Actions[0].StatusProgressCounter},\n" +
-                        $"Expected status: {expectedStatus}, actual status: {updateBatch.Documents[0].Actions[0].Status} ");
+                    Assert.Fail($"Expected counter value: {nextCounterValue}, actual counter value: {updateBatch.Documents[1].Actions[0].StatusProgressCounter},\n" +
+                        $"Expected status: {expectedStatus}, actual status: {updateBatch.Documents[1].Actions[0].Status} ");
                 }
 
                 retry++;
-                await Task.Delay(10);
+                // await Task.Delay(10);
             }
-            while (retry < 150);
+            while (retry < 500);
             if (!success)
                 Console.WriteLine("FAILED to update counter");
         }

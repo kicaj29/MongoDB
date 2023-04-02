@@ -1,4 +1,5 @@
 ﻿using ApiUsageExamples.Tests.MongoModels;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,13 +12,20 @@ namespace ApiUsageExamples.Tests
     internal class FindOneAndUpdateTest : BaseTest
     {
 
+        /// <summary>
+        /// This test shows that ReturnDocument.After returns document with changes executed only
+        /// by the current update operation, changes executed by other threads are out of scope.
+        /// </summary>
+        /// <returns></returns>
         [Test]
+        [Repeat(10)]
         public async Task FindOneAndUpdateMultithreading()
         {
             // Arrange
             var collection = DB.GetCollection<Batch>("Batches");
             Batch batch = new Batch();
             batch.ID = ObjectId.GenerateNewId().ToString();
+            Console.WriteLine($"Generated batch id: {batch.ID}");
             List<Document> documents = new List<Document>();
             var doc1Id = ObjectId.GenerateNewId().ToString();
             documents.Add(new Document()
@@ -45,6 +53,8 @@ namespace ApiUsageExamples.Tests
             }
 
             await Task.WhenAll(allTasks);
+
+            await collection.DeleteOneAsync(Builders<Batch>.Filter.Eq(p => p.ID, batch.ID));
 
         }
 

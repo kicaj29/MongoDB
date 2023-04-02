@@ -25,7 +25,7 @@ namespace ApiUsageExamples.Tests
             {
                 cb.Subscribe<CommandStartedEvent>(e =>
                 {
-                    Console.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
+                    // Console.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
                 });
             };
 

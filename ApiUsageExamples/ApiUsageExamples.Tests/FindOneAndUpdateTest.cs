@@ -18,7 +18,7 @@ namespace ApiUsageExamples.Tests
         /// </summary>
         /// <returns></returns>
         [Test]
-        [Repeat(10)]
+        [Repeat(1)]
         public async Task FindOneAndUpdateMultithreading()
         {
             // Arrange

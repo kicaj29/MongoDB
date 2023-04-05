@@ -1,6 +1,7 @@
 ﻿using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,11 +35,28 @@ namespace ApiUsageExamples.Tests
             var personRead = (await collection.Find(Builders<Person>.Filter.Eq(filter => filter.Id, p.Id)).Limit(1).ToListAsync())[0];
             await collection.DeleteOneAsync(Builders<Person>.Filter.Eq(filter => filter.Id, personRead.Id));
 
-            IndexKeysDefinition<Person> indexDefinition2 = Builders<Person>.IndexKeys.Ascending(key => key.FirstName);
-            CreateIndexModel<Person> indexModel2 = new(indexDefinition2, new CreateIndexOptions() { Name = nameof(Person.LastName) });
-            // There is no way to update index. In such case we have to drop then index and create new one.
-            MongoCommandException exception = Assert.ThrowsAsync<MongoCommandException>(async () => await collection.Indexes.CreateOneAsync(indexModel2));
+            // 1.   There is no way to update index. In such case we have to drop the index and create new one.
+            // 1A.  Try to update index by changing keys (LastName -> FirstName) and using the same name.
+            IndexKeysDefinition<Person> indexDefinition1A = Builders<Person>.IndexKeys.Ascending(key => key.FirstName);
+            CreateIndexModel<Person> indexModel1A = new(indexDefinition1A, new CreateIndexOptions() { Unique = true, Name = nameof(Person.LastName) });
+            MongoCommandException exception = Assert.ThrowsAsync<MongoCommandException>(async () => await collection.Indexes.CreateOneAsync(indexModel1A));
             Assert.That("IndexKeySpecsConflict", Is.EqualTo(exception.CodeName));
+            Debug.WriteLine(exception.Message);
+            // Command createIndexes failed: Index must have unique name.The existing index: { v: 2, unique: true, key: { LastName: 1 }, name: "LastName" } has the same name as the requested index: { v: 2, unique: true, key: { FirstName: 1 }, name: "LastName" }.
+
+            // 1B.  Try to change index name (use the same model but just with different name)
+            CreateIndexModel<Person> indexModel1B = new(indexDefinition, new CreateIndexOptions() { Unique = true, Name = "LastNameBetterName" });
+            exception = Assert.ThrowsAsync<MongoCommandException>(async () => await collection.Indexes.CreateOneAsync(indexModel1B));
+            Assert.That("IndexOptionsConflict", Is.EqualTo(exception.CodeName));
+            Debug.WriteLine(exception.Message); // Command createIndexes failed: Index with name: LastNameBetterName already exists with a different name.
+
+            // 2. Index name is unique in scope of its collection, different collections can use the same index names
+            IndexKeysDefinition<Customer> customerIndexDefinition = Builders<Customer>.IndexKeys.Ascending(key => key.LastName);
+            // By default indexes are not unique
+            CreateIndexModel<Customer> indexModelCustomer = new(customerIndexDefinition, new CreateIndexOptions() { Unique = true, Name = nameof(Customer.LastName) });
+            var collectionCusomters = DB.GetCollection<Customer>("Customers");
+            Assert.DoesNotThrowAsync(async () => await collectionCusomters.Indexes.CreateOneAsync(indexModelCustomer));
+
 
         }
     }

@@ -133,6 +133,11 @@ namespace ApiUsageExamples.Tests
             Assert.That(indexes.Current.Count, Is.EqualTo(2));
 
             var indicies = indexes.Current.ToList();
+
+            int nameIndex = indicies[1].Names.ToList().IndexOf("name");
+            string name = indicies[1].Values.ToList()[nameIndex].AsString;
+            Assert.That(name, Is.EqualTo(nameof(Person.LastName)));
+
             int uniqueOptionIndex = indicies[1].Names.ToList().IndexOf("unique");
             var uniqueOptionValue = indicies[1].Values.ToList()[uniqueOptionIndex].AsBoolean;
             Assert.IsTrue(uniqueOptionValue);

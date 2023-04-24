@@ -142,5 +142,29 @@ namespace ApiUsageExamples.Tests
             var uniqueOptionValue = indicies[1].Values.ToList()[uniqueOptionIndex].AsBoolean;
             Assert.IsTrue(uniqueOptionValue);
         }
+
+        [Test]
+        public async Task CaseInsensitiveAndCaseSensitiveIndexes()
+        {
+            IndexKeysDefinition<Person> indexDefinition = Builders<Person>.IndexKeys.Ascending(key => key.LastName);
+            CreateIndexModel<Person> indexModel = new(indexDefinition, new CreateIndexOptions() { Unique = true, Name = nameof(Person.LastName) });
+            var collection = DB.GetCollection<Person>("Persons");
+            await collection.Indexes.CreateOneAsync(indexModel);
+
+            Person p = new Person();
+            p.FirstName = "Jacek";
+            p.LastName = "Placek";
+            await collection.InsertOneAsync(p);
+            MongoWriteException writeException = Assert.ThrowsAsync<MongoWriteException>(async () => await collection.InsertOneAsync(p));
+            Assert.That(writeException.WriteError.Category, Is.EqualTo(ServerErrorCategory.DuplicateKey));
+
+            p = new Person();
+            p.FirstName = "Jacek";
+            p.LastName = "placek";
+            // By default mongo indexes are case sensitive
+            Assert.DoesNotThrowAsync(async() => await collection.InsertOneAsync(p));
+
+            //TODO: show indexes which are case insensitive
+        }
     }
 }

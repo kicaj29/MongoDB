@@ -144,7 +144,7 @@ namespace ApiUsageExamples.Tests
         }
 
         [Test]
-        public async Task CaseInsensitiveAndCaseSensitiveIndexes()
+        public async Task CaseSensitiveIndexes()
         {
             IndexKeysDefinition<Person> indexDefinition = Builders<Person>.IndexKeys.Ascending(key => key.LastName);
             CreateIndexModel<Person> indexModel = new(indexDefinition, new CreateIndexOptions() { Unique = true, Name = nameof(Person.LastName) });
@@ -163,8 +163,27 @@ namespace ApiUsageExamples.Tests
             p.LastName = "placek";
             // By default mongo indexes are case sensitive
             Assert.DoesNotThrowAsync(async() => await collection.InsertOneAsync(p));
+        }
 
-            //TODO: show indexes which are case insensitive
+        [Test]
+        public async Task CaseInsensitiveIndexes()
+        {
+            IndexKeysDefinition<Person> indexDefinition = Builders<Person>.IndexKeys.Ascending(key => key.LastName);
+            CreateIndexModel<Person> indexModel = new(indexDefinition, new CreateIndexOptions() { Unique = true, Name = nameof(Person.LastName), Collation = new Collation("en_US", strength: CollationStrength.Secondary)});
+            var collection = DB.GetCollection<Person>("Persons");
+            await collection.Indexes.CreateOneAsync(indexModel);
+
+            Person p = new Person();
+            p.FirstName = "Jacek";
+            p.LastName = "Placek";
+            await collection.InsertOneAsync(p);
+
+            p = new Person();
+            p.FirstName = "Jacek";
+            p.LastName = "placek";
+            // This index is case insensitive so it will not allow insert "placek".
+            MongoWriteException writeException = Assert.ThrowsAsync<MongoWriteException>(async () => await collection.InsertOneAsync(p));
+            Assert.That(writeException.WriteError.Category, Is.EqualTo(ServerErrorCategory.DuplicateKey));
         }
     }
 }

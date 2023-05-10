@@ -11,5 +11,14 @@ namespace ApiUsageExamples.Performance.DbModels
 
         public string FirstName { get; set; } = default!;
         public string LastName { get; set; } = default!;
+
+        public List<string> Data1 { get; set; } = default!;
+
+        public List<string> Data2 { get; set; } = default!;
+
+        public List<string> Data3 { get; set; } = default!;
+
+        public List<string> Data4 { get; set; } = default!;
+
     }
 }

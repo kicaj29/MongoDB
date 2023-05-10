@@ -1,6 +1,11 @@
+- [Docs](#docs)
 - [Server parameters](#server-parameters)
   - [Cache size](#cache-size)
 
+
+# Docs
+
+https://www.mongodb.com/docs/manual/reference/command/collStats/#output
 
 # Server parameters
 

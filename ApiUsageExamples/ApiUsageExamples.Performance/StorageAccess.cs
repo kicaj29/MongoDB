@@ -3,6 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Events;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ApiUsageExamples.Performance
@@ -19,7 +20,7 @@ namespace ApiUsageExamples.Performance
             Init();
 
             // Arrange
-            await DB.CreateCollectionAsync("Persons", new CreateCollectionOptions<Person>()
+            await DB.CreateCollectionAsync("Persons_ClusteredCollection", new CreateCollectionOptions<Person>()
             {
                 ClusteredIndex = new ClusteredIndexOptions<Person>()
                 {
@@ -31,18 +32,70 @@ namespace ApiUsageExamples.Performance
 
             List<Person> dataToInsert = new List<Person>();
             int i = 0;
-            while (i < 100000)
+            while (i < 10000)
             {
                 i++;
                 Person p = new Person();
                 p.Id = ObjectId.GenerateNewId().ToString();
                 p.FirstName = $"FirstName_{i}";
                 p.LastName = $"LastName_{i}";
+                p.Data1 = new List<string>();
+                p.Data2 = new List<string>();
+                p.Data3 = new List<string>();
+                p.Data4 = new List<string>();
+
+                int x = 0;
+                while(x < 0)
+                {
+                    x++;
+                    p.Data1.Add($"Data_{x}");
+                    p.Data2.Add($"Data_{x}");
+                    p.Data3.Add($"Data_{x}");
+                    p.Data4.Add($"Data_{x}");
+                }
+
                 dataToInsert.Add(p);
             }
 
-            var collection = DB.GetCollection<Person>("Persons");
-            await collection.InsertManyAsync(dataToInsert);
+            Random random = new Random();
+            List<string> idsRandomOrder = dataToInsert.Select(d => d.Id).OrderBy(d => random.Next().ToString()).ToList();
+
+            var clusteredCollection = DB.GetCollection<Person>("Persons_ClusteredCollection");
+            await clusteredCollection.InsertManyAsync(dataToInsert);
+
+            var nonClusteredCollection = DB.GetCollection<Person>("Persons_NonClusteredCollection");
+            await nonClusteredCollection.InsertManyAsync(dataToInsert);
+
+
+            // https://www.mongodb.com/docs/manual/tutorial/ensure-indexes-fit-ram/
+            // https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
+            // "The clustered index keys are stored with the collection. The collection size returned by the collStats command includes the clustered index size."
+
+            // Check mongo stats
+            // PerformanceTests > db.Persons_ClusteredCollection.stats().indexSizes{ }
+
+
+            // PerformanceTests> db.Persons_NonClusteredCollection.stats({ indexDetails: true }).totalIndexSize 114688
+            // PerformanceTests> db.Persons_NonClusteredCollection.stats({ indexDetails: true }).totalSize 323584
+            // PerformanceTests> db.Persons_NonClusteredCollection.stats().indexSizes { _id_: 114688 }
+            // See 'bytes currently in the cache': 285026
+            // PerformanceTests> db.Persons_NonClusteredCollection.stats({ indexDetails: true }).indexDetails._id_.cache
+
+            // Act
+            Stopwatch sw = Stopwatch.StartNew();
+            int queriesAmount = 10000;
+            for (int index = 0; index < queriesAmount; index++)
+            {
+                List<Person> personsFromDB = await clusteredCollection.Find(Builders<Person>.Filter.Eq(p1 => p1.Id, idsRandomOrder[index])).Limit(1).ToListAsync();
+            }
+            Debug.WriteLine($"Read from clustered collection: {sw.Elapsed}.");
+            sw.Restart();
+
+            for (int index = 0; index < queriesAmount; index++)
+            {
+                List<Person> personsFromDB = await nonClusteredCollection.Find(Builders<Person>.Filter.Eq(p1 => p1.Id, idsRandomOrder[index])).Limit(1).ToListAsync();
+            }
+            Debug.WriteLine($"Read from non clustered collection: {sw.Elapsed}.");
         }
 
         private void Init()

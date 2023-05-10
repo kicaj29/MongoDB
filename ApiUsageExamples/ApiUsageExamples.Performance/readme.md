@@ -12,7 +12,7 @@ Selected stats descriptions:
 * `totalIndexSize`: the total size of all indexes. **If an index uses prefix compression** (which is the default for `WiredTiger`), the returned size **reflects the compressed size** for any such indexes when calculating the total.
 * `totalSize`: the sum of the `storageSize` and `totalIndexSize`
 
-| Tables                          |      size      |  storageSize | totalIndexSize | totalSize | wiredTiger.cache                           | indexDetails
+| Tables                          |      size      |  storageSize | totalIndexSize | totalSize | wiredTiger.cache                           |
 |---------------------------------|---------------:|-------------:|---------------:|----------:|-------------------------------------------:|
 | Persons_ClusteredCollection     |  1 277 788     | 221 184      |              0 | 221 184   |  'bytes currently in the cache': 2 503 838
 | Persons_NonClusteredCollection  |  1 277 788     | 208 896      |        114 688 | 323 584   | 

@@ -92,7 +92,7 @@
   - [replication service status](#replication-service-status)
 - [Backup and restore](#backup-and-restore)
 - [Aggregations](#aggregations)
-- [AspNetCore and MongoDB](#aspnetcore-and-mongodb)
+- [Using mongodb docker image](#using-mongodb-docker-image)
 
 # Basics
 ## MongoDB is document database type.
@@ -2056,10 +2056,10 @@ db.listingsAndReviews.aggregate([
 ])
 ```
 
+# Using mongodb docker image
 
+https://hub.docker.com/_/mongo
 
-# AspNetCore and MongoDB
-
-[SourceCode](/AspNetCoreWebApiMongoDB)
-
+To connect to the server run: 
+`PS D:\Programs\mongosh-1.8.2-win32-x64\mongosh-1.8.2-win32-x64\bin> .\mongosh.exe "mongodb://localhost:27017/?readPreference=primary&directConnection=true&ssl=false"`
 

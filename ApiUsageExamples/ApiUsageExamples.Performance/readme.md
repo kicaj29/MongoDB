@@ -9,7 +9,7 @@ Selected stats descriptions:
 * `storageSize`: the total amount of storage allocated to this collection for document storage. If collection data is compressed (which is the default for `WiredTiger`), the storage size **reflects the compressed size** and **may be smaller than the value for `size`**. `storageSize`
  does not include index size (see `totalIndexSize`).
  for index sizing.
-* `totalIndexSize`: the total size of all indexes. If an index uses prefix compression (which is the default for `WiredTiger`), the returned size reflects the compressed size for any such indexes when calculating the total.
+* `totalIndexSize`: the total size of all indexes. **If an index uses prefix compression** (which is the default for `WiredTiger`), the returned size **reflects the compressed size** for any such indexes when calculating the total.
 * `totalSize`: the sum of the `storageSize` and `totalIndexSize`
 
 Run 01

@@ -12,6 +12,12 @@ Selected stats descriptions:
 * `totalIndexSize`: the total size of all indexes. **If an index uses prefix compression** (which is the default for `WiredTiger`), the returned size **reflects the compressed size** for any such indexes when calculating the total.
 * `totalSize`: the sum of the `storageSize` and `totalIndexSize`
 
+| Tables                          |      size      |  storageSize | totalIndexSize | totalSize |
+|---------------------------------|---------------:|-------------:|---------------:|----------:|
+| Persons_ClusteredCollection     |  left-aligned | $1600 |
+| Persons_NonClusteredCollection  |        ered   |   $12 |
+| col 3 is | right-aligned |    $1 |
+
 Run 01
 Read from clustered collection: 00:00:17.2014820.
 Read from non clustered collection: 00:00:18.2659679.

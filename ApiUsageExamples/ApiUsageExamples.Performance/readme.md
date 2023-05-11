@@ -45,6 +45,7 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 ## No extra data - 10k documents, 10k queries
 
 * Stats
+
 | Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize | wiredTiger.cache                           | indexDetails._id_.cache                     |
 |---------------------------------|---------------:|-------------:|------------------:|--------------:|-----------|-------------------------------------------:|--------------------------------------------:|
 | Persons_ClusteredCollection     |  1 277 788     | 221 184      |           N/A     |             0 | 221 184   |'bytes currently in the cache': 2 503 302   |  N/A                                        |       
@@ -52,6 +53,7 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 
 
 * Reading data
+
 |Test number|Clustered collection [s]|Non clustered collection [s]|
 |----------:|-----------------------:|---------------------------:|
 |1          |00:00:17.55             |00:00:18.29                 |

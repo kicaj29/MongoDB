@@ -44,12 +44,14 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 
 ## No extra data - 10k documents, 10k queries
 
+* Stats
 | Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize | wiredTiger.cache                           | indexDetails._id_.cache                     |
 |---------------------------------|---------------:|-------------:|------------------:|--------------:|-----------|-------------------------------------------:|--------------------------------------------:|
 | Persons_ClusteredCollection     |  1 277 788     | 221 184      |           N/A     |             0 | 221 184   |'bytes currently in the cache': 2 503 302   |  N/A                                        |       
 | Persons_NonClusteredCollection  |  1 277 788     | 208 896      | { _id_: 114 688 } |  114 688      | 323 584   |'bytes currently in the cache': 2 384 911   | 'bytes currently in the cache': 1 131 452   |
 
 
+* Reading data
 |Test number|Clustered collection|Non clustered collection|
 |----------:|-------------------:|-----------------------:|
 |1          |00:00:17.55         |00:00:18.29             |
@@ -63,12 +65,14 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 
 ## With extra data - 10k documents, 50 items in every list, 10k queries
 
+* Stats
 | Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize   | wiredTiger.cache                            | indexDetails._id_.cache                     |
 |---------------------------------|---------------:|-------------:|------------------:|--------------:|-------------|--------------------------------------------:|--------------------------------------------:|
 | Persons_ClusteredCollection     | 32 517 788     | 2 306 048    |           N/A     |             0 | 2 306 048   |'bytes currently in the cache': 35 454 915   |  N/A                                        |       
 | Persons_NonClusteredCollection  | 32 517 788     | 2 289 664    | { _id_: 114 688 } |  114 688      | 2 404 352   |'bytes currently in the cache': 35 430 435   | 'bytes currently in the cache': 270 598     |
 
 
+* Reading data
 |Test number|Clustered collection|Non clustered collection|
 |----------:|-------------------:|-----------------------:|
 |1          |00:00:16.18         |00:00:18.65             |
@@ -82,12 +86,14 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 
 ## With extra data - 30k documents, 50 items in every list, 30k queries
 
+* Stats
 | Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize   | wiredTiger.cache                            | indexDetails._id_.cache                     |
 |---------------------------------|---------------:|-------------:|------------------:|--------------:|-------------|--------------------------------------------:|--------------------------------------------:|
 | Persons_ClusteredCollection     | 97 597 788     | 6 881 280    |           N/A     |             0 | 6 881 280   |'bytes currently in the cache': 106 410 861  |  N/A                                        |       
 | Persons_NonClusteredCollection  | 97 597 788     | 6 856 704    | { _id_: 307 200 } |  307 200      | 71 63 904   |'bytes currently in the cache': 106 067 989  | 'bytes currently in the cache': 826 251     |
 
 
+* Reading data
 |Test number|Clustered collection|Non clustered collection|
 |----------:|-------------------:|-----------------------:|
 |1          |00:00:55.76         |00:00:59.42             |

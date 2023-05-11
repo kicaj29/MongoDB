@@ -111,4 +111,4 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 * Before running tests make sure that all indexes are cached: https://www.mongodb.com/docs/manual/tutorial/ensure-indexes-fit-ram/
 * Query using random order of ids: https://www.mongodb.com/docs/manual/tutorial/ensure-indexes-fit-ram/#indexes-that-hold-only-recent-values-in-ram
 * Clustered collections are faster but only a little bit
-  * It is harder to code creating clustered collections because they have to be created explicitly and if the collection already exist it throws exception: `MongoCommandException: Command create failed: Collection PerformanceTests.Persons_ClusteredCollection already exists..`
+  * It is harder to code creating clustered collections because they have to be created explicitly and if the collection already exist it throws exception: `MongoCommandException: Command create failed: Collection PerformanceTests.Persons_ClusteredCollection already exists..`. To manage it dedicated service could be used to provision necessary collections in MongoDB before worker service will start using it.

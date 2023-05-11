@@ -32,7 +32,7 @@ namespace ApiUsageExamples.Performance
 
             List<Person> dataToInsert = new List<Person>();
             int i = 0;
-            while (i < 10000)
+            while (i < 30000)
             {
                 i++;
                 Person p = new Person();
@@ -45,7 +45,7 @@ namespace ApiUsageExamples.Performance
                 p.Data4 = new List<string>();
 
                 int x = 0;
-                while(x < 0)
+                while(x < 50)
                 {
                     x++;
                     p.Data1.Add($"Data_{x}");
@@ -68,7 +68,7 @@ namespace ApiUsageExamples.Performance
 
             // Act
             Stopwatch sw = Stopwatch.StartNew();
-            int queriesAmount = 10000;
+            int queriesAmount = 30000;
             for (int index = 0; index < queriesAmount; index++)
             {
                 List<Person> personsFromDB = await clusteredCollection.Find(Builders<Person>.Filter.Eq(p1 => p1.Id, idsRandomOrder[index])).Limit(1).ToListAsync();

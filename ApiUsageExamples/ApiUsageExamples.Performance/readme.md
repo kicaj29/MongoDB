@@ -52,41 +52,44 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 
 
 * Reading data
-|Test number|Clustered collection|Non clustered collection|
-|----------:|-------------------:|-----------------------:|
-|1          |00:00:17.55         |00:00:18.29             |
-|2          |00:00:16.09         |00:00:17.85             |
-|3          |00:00:15.51         |00:00:16.88             |
-|4          |00:00:15.87         |00:00:16.74             |
-|5          |00:00:16.83         |00:00:19.25             |
-|6          |00:00:15.84         |00:00:18.12             |
-|7          |00:00:19.40         |00:00:18.55             |
+|Test number|Clustered collection [s]|Non clustered collection [s]|
+|----------:|-----------------------:|---------------------------:|
+|1          |00:00:17.55             |00:00:18.29                 |
+|2          |00:00:16.09             |00:00:17.85                 |
+|3          |00:00:15.51             |00:00:16.88                 |
+|4          |00:00:15.87             |00:00:16.74                 |
+|5          |00:00:16.83             |00:00:19.25                 |
+|6          |00:00:15.84             |00:00:18.12                 |
+|7          |00:00:19.40             |00:00:18.55                 |
 
 
 ## With extra data - 10k documents, 50 items in every list, 10k queries
 
 * Stats
+
 | Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize   | wiredTiger.cache                            | indexDetails._id_.cache                     |
 |---------------------------------|---------------:|-------------:|------------------:|--------------:|-------------|--------------------------------------------:|--------------------------------------------:|
 | Persons_ClusteredCollection     | 32 517 788     | 2 306 048    |           N/A     |             0 | 2 306 048   |'bytes currently in the cache': 35 454 915   |  N/A                                        |       
 | Persons_NonClusteredCollection  | 32 517 788     | 2 289 664    | { _id_: 114 688 } |  114 688      | 2 404 352   |'bytes currently in the cache': 35 430 435   | 'bytes currently in the cache': 270 598     |
 
 
-* Reading data
-|Test number|Clustered collection|Non clustered collection|
-|----------:|-------------------:|-----------------------:|
-|1          |00:00:16.18         |00:00:18.65             |
-|2          |00:00:12.90         |00:00:15.47             |
-|3          |00:00:14.02         |00:00:16.88             |
-|4          |00:00:16.80         |00:00:18.19             |
-|5          |00:00:16.58         |00:00:16.99             |
-|6          |00:00:19.27         |00:00:18.66             |
-|7          |00:00:16.99         |00:00:18.02             |
+* Reading data]
+
+|Test number|Clustered collection [s]|Non clustered collection [s]|
+|----------:|-----------------------:|---------------------------:|
+|1          |00:00:16.18             |00:00:18.65                 |
+|2          |00:00:12.90             |00:00:15.47                 |
+|3          |00:00:14.02             |00:00:16.88                 |
+|4          |00:00:16.80             |00:00:18.19                 |
+|5          |00:00:16.58             |00:00:16.99                 |
+|6          |00:00:19.27             |00:00:18.66                 |
+|7          |00:00:16.99             |00:00:18.02                 |
 
 
 ## With extra data - 30k documents, 50 items in every list, 30k queries
 
 * Stats
+
 | Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize   | wiredTiger.cache                            | indexDetails._id_.cache                     |
 |---------------------------------|---------------:|-------------:|------------------:|--------------:|-------------|--------------------------------------------:|--------------------------------------------:|
 | Persons_ClusteredCollection     | 97 597 788     | 6 881 280    |           N/A     |             0 | 6 881 280   |'bytes currently in the cache': 106 410 861  |  N/A                                        |       
@@ -94,8 +97,9 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 
 
 * Reading data
-|Test number|Clustered collection|Non clustered collection|
-|----------:|-------------------:|-----------------------:|
-|1          |00:00:55.76         |00:00:59.42             |
-|2          |00:00:47.47         |00:00:49.86             |
-|3          |00:00:48.04         |00:00:50.61             |
+
+|Test number|Clustered collection [s]|Non clustered collection [s]|
+|----------:|-----------------------:|---------------------------:|
+|1          |00:00:55.76             |00:00:59.42                 |
+|2          |00:00:47.47             |00:00:49.86                 |
+|3          |00:00:48.04             |00:00:50.61                 |

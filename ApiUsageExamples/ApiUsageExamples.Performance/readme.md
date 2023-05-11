@@ -75,7 +75,7 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 | Persons_NonClusteredCollection  | 32 517 788     | 2 289 664    | { _id_: 114 688 } |  114 688      | 2 404 352   |'bytes currently in the cache': 35 430 435   | 'bytes currently in the cache': 270 598     |
 
 
-* Reading data]
+* Reading data
 
 |Test number|Clustered collection [s]|Non clustered collection [s]|
 |----------:|-----------------------:|---------------------------:|

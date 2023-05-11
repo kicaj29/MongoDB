@@ -105,3 +105,10 @@ https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
 |1          |00:00:55.76             |00:00:59.42                 |
 |2          |00:00:47.47             |00:00:49.86                 |
 |3          |00:00:48.04             |00:00:50.61                 |
+
+## Summary
+
+* Before running tests make sure that all indexes are cached: https://www.mongodb.com/docs/manual/tutorial/ensure-indexes-fit-ram/
+* Query using random order of ids: https://www.mongodb.com/docs/manual/tutorial/ensure-indexes-fit-ram/#indexes-that-hold-only-recent-values-in-ram
+* Clustered collections are faster but only a little bit
+  * It is harder to code creating clustered collections because they have to be created explicitly and if the collection already exist it throws exception: `MongoCommandException: Command create failed: Collection PerformanceTests.Persons_ClusteredCollection already exists..`

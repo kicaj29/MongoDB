@@ -13,31 +13,35 @@ Selected stats descriptions:
 * `totalSize`: the sum of the `storageSize` and `totalIndexSize`
 
 
-How to collect stats for `Persons_ClusteredCollection`:
+## How to collect stats for `Persons_ClusteredCollection`:
 
-* db.Persons_ClusteredCollection.stats().size
-* db.Persons_ClusteredCollection.stats().storageSize
-* db.Persons_ClusteredCollection.stats().totalIndexSize
-* db.Persons_ClusteredCollection.stats().totalSize
-* db.Persons_ClusteredCollection.stats().indexSizes
-* db.Persons_ClusteredCollection.stats().wiredTiger.cache
-* db.Persons_NonClusteredCollection.stats({ indexDetails: true }).indexDetails
+* `db.Persons_ClusteredCollection.stats().size`
+* `db.Persons_ClusteredCollection.stats().storageSize`
+* `db.Persons_ClusteredCollection.stats().indexSizes`
+* `db.Persons_ClusteredCollection.stats().totalIndexSize`
+* `db.Persons_ClusteredCollection.stats().totalSize`
+* `db.Persons_ClusteredCollection.stats().wiredTiger.cache`
+* `db.Persons_ClusteredCollection.stats({ indexDetails: true }).indexDetails`
 
-How to collect stats for `Persons_ClusteredCollection`:
+## How to collect stats for `Persons_ClusteredCollection`:
 
-* db.Persons_NonClusteredCollection.stats().size
-* db.Persons_NonClusteredCollection.stats().storageSize
-* db.Persons_NonClusteredCollection.stats().totalIndexSize
-* db.Persons_NonClusteredCollection.stats().indexSizes
-* db.Persons_NonClusteredCollection.stats().wiredTiger.cache
-* db.Persons_NonClusteredCollection.stats({ indexDetails: true }).indexDetails._id_.cache
+* `db.Persons_NonClusteredCollection.stats().size`
+* `db.Persons_NonClusteredCollection.stats().storageSize`
+* `db.Persons_NonClusteredCollection.stats().indexSizes`
+* `db.Persons_NonClusteredCollection.stats().totalIndexSize`
+* `db.Persons_NonClusteredCollection.stats().totalSize`
+* `db.Persons_NonClusteredCollection.stats().wiredTiger.cache`
+* `db.Persons_NonClusteredCollection.stats({ indexDetails: true }).indexDetails._id_.cache`
 
-Results:
+## Server configuration
 
-| Tables                          |      size      |  storageSize | indexSizes       |totalIndexSize | totalSize | wiredTiger.cache                           | indexDetails._id_.cache                     |
-|---------------------------------|---------------:|-------------:|-----------------:|--------------:|-----------|-------------------------------------------:|--------------------------------------------:|
-| Persons_ClusteredCollection     |  1 277 788     | 221 184      |           N/A    |             0 | 221 184   |'bytes currently in the cache': 2 503 838   |  N/A                                        |       
-| Persons_NonClusteredCollection  |  1 277 788     | 208 896      | { _id_: 114688 } |               | 114 688   | 323 584   |'bytes currently in the cache': 2 384 850   | 'bytes currently in the cache': 1 131 452   |
+`db.serverStatus().wiredTiger.cache` returns `'maximum bytes configured': 268 435 456` it is max cache size.
+
+
+| Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize | wiredTiger.cache                           | indexDetails._id_.cache                     |
+|---------------------------------|---------------:|-------------:|------------------:|--------------:|-----------|-------------------------------------------:|--------------------------------------------:|
+| Persons_ClusteredCollection     |  1 277 788     | 221 184      |           N/A     |             0 | 221 184   |'bytes currently in the cache': 2 503 838   |  N/A                                        |       
+| Persons_NonClusteredCollection  |  1 277 788     | 208 896      | { _id_: 114 688 } |  114 688      | 323 584   |'bytes currently in the cache': 2 384 850   | 'bytes currently in the cache': 1 131 452   |
 
 Run 01
 Read from clustered collection: 00:00:17.2014820.

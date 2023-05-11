@@ -66,21 +66,6 @@ namespace ApiUsageExamples.Performance
             var nonClusteredCollection = DB.GetCollection<Person>("Persons_NonClusteredCollection");
             await nonClusteredCollection.InsertManyAsync(dataToInsert);
 
-
-            // https://www.mongodb.com/docs/manual/tutorial/ensure-indexes-fit-ram/
-            // https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
-            // "The clustered index keys are stored with the collection. The collection size returned by the collStats command includes the clustered index size."
-
-            // Check mongo stats
-            // PerformanceTests > db.Persons_ClusteredCollection.stats().indexSizes{ }
-
-
-            // PerformanceTests> db.Persons_NonClusteredCollection.stats({ indexDetails: true }).totalIndexSize 114688
-            // PerformanceTests> db.Persons_NonClusteredCollection.stats({ indexDetails: true }).totalSize 323584
-            // PerformanceTests> db.Persons_NonClusteredCollection.stats().indexSizes { _id_: 114688 }
-            // See 'bytes currently in the cache': 285026
-            // PerformanceTests> db.Persons_NonClusteredCollection.stats({ indexDetails: true }).indexDetails._id_.cache
-
             // Act
             Stopwatch sw = Stopwatch.StartNew();
             int queriesAmount = 10000;

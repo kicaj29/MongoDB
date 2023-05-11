@@ -13,6 +13,11 @@ Selected stats descriptions:
 * `totalSize`: the sum of the `storageSize` and `totalIndexSize`
 
 
+https://www.mongodb.com/docs/manual/tutorial/ensure-indexes-fit-ram/
+
+https://www.mongodb.com/docs/manual/core/clustered-collections/#behavior
+*"The clustered index keys are stored with the collection. The collection size returned by the collStats command includes the clustered index size."*
+
 ## How to collect stats for `Persons_ClusteredCollection`:
 
 * `db.Persons_ClusteredCollection.stats().size`
@@ -35,15 +40,23 @@ Selected stats descriptions:
 
 ## Server configuration
 
-`db.serverStatus().wiredTiger.cache` returns `'maximum bytes configured': 268 435 456` it is max cache size.
+`db.serverStatus().wiredTiger.cache` returns `'maximum bytes configured': 268 435 456` it is **max cache size**.
 
 
 | Tables                          |      size      |  storageSize | indexSizes        |totalIndexSize | totalSize | wiredTiger.cache                           | indexDetails._id_.cache                     |
 |---------------------------------|---------------:|-------------:|------------------:|--------------:|-----------|-------------------------------------------:|--------------------------------------------:|
-| Persons_ClusteredCollection     |  1 277 788     | 221 184      |           N/A     |             0 | 221 184   |'bytes currently in the cache': 2 503 838   |  N/A                                        |       
-| Persons_NonClusteredCollection  |  1 277 788     | 208 896      | { _id_: 114 688 } |  114 688      | 323 584   |'bytes currently in the cache': 2 384 850   | 'bytes currently in the cache': 1 131 452   |
+| Persons_ClusteredCollection     |  1 277 788     | 221 184      |           N/A     |             0 | 221 184   |'bytes currently in the cache': 2 503 302   |  N/A                                        |       
+| Persons_NonClusteredCollection  |  1 277 788     | 208 896      | { _id_: 114 688 } |  114 688      | 323 584   |'bytes currently in the cache': 2 384 911   | 'bytes currently in the cache': 1 131 452   |
 
-Run 01
-Read from clustered collection: 00:00:17.2014820.
-Read from non clustered collection: 00:00:18.2659679.
+
+## No extra data
+
+|Test number|Clustered collection|Non clustered collection|
+|----------:|-------------------:|-----------------------:|
+|1          |00:00:17.55         |00:00:18.29             |
+|2          |00:00:16.09         |00:00:17.85             |
+|3          |00:00:15.51         |00:00:16.88             |
+|4          |00:00:15.87         |00:00:16.74             |
+|5          |00:00:16.83         |00:00:19.25             |
+
 

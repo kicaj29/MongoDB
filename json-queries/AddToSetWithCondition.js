@@ -61,3 +61,17 @@ db.document.updateOne(
         }
     }
 )
+
+// this will add field2 because it does not exist
+db.document.updateOne(
+    { name: "doc1", "fields.id": { $ne: "field2" } },
+    { $push: 
+        {
+            fields:
+            {
+                id: "field2",
+                value: "val1" 
+            }
+        }
+    }
+)

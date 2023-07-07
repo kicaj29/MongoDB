@@ -25,37 +25,30 @@ db.document.updateOne(
                     $reduce:
                     {
                         input: '$fields',
-                        initialValue  : [],
+                        initialValue  :
+                        [
+                            {
+                                id: "field2",
+                                value: "val3"
+                            }                            
+                        ],
                         in:
                         {
                             $switch :
                             {
                                 branches  : 
                                 [
-                                    // add if does not exist
+                                    // add if exists, do nothing
                                     {
                                         case: 
                                         {
-                                            /*$or: [
-                                                { $eq : [ "$$this.id", "field2" ] },
-                                                ]*/
-                                            "$$this.id": { $exists: true, $nin: [ "field2" ] }
+                                            $in: ["$$this.id", "$$value.id"]
                                         }
-                                        then:
-                                        {
-                                            $concatArrays: [ "$$value", [
-                                                "$$this",
-                                                {
-                                                    id: "field2",
-                                                    value: "val2"
-                                                }
-                                                ]
-                                            ]
-                                        }
+                                        then: ["$$this"]
                                     },
                                 ],
-                                // by default do nothing
-                                default : { $concatArrays : [ "$$value", [ "$$this" ] ] },
+                                // by default add
+                                default : { $concatArrays: ["$$value", ["$$this"]] },
                             }
                         }
                     }
@@ -149,9 +142,9 @@ db.document.updateOne(
                         {
                             $cond:
                             [
-                                { $in: ["$$this.id", "$$value.id"] }, // Check id exists in 'fields' array
+                                { $in: ["$$this.id", "$$value.id"] }, // Check if id exists in 'fields' array
                                 ["$$this"], // If YES, return input
-                                { $concatArrays: ["$$value", ["$$this"]] }, // If YES, do nothing
+                                { $concatArrays: ["$$value", ["$$this"]] }, // If NO, add this element to the array
                             ]
                         }
                     }

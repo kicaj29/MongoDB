@@ -8,7 +8,6 @@ db.document.insert(
                 value: "val1"
             }
         ]
-        
     } 
 )
 

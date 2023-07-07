@@ -12,8 +12,27 @@ db.document.insert(
     } 
 )
 
+db.document.insert( 
+    { 
+        name: "doc1", 
+        fields: 
+        [
+            {
+                id: "field1",
+                value: "val1"
+            },
+            {
+                id: "field2",
+                value: "val2"
+            }
+        ]
+        
+    } 
+)
+
 db.document.find( { name: "doc1" } )
 
+// GOOD!!!!
 db.document.updateOne(
     { name: "doc1" },
     [
@@ -28,9 +47,13 @@ db.document.updateOne(
                         initialValue  :
                         [
                             {
-                                id: "field2",
+                                id: "field3",
+                                value: "val3"
+                            },
+                            {
+                                id: "field4",
                                 value: "val4"
-                            }                            
+                            }   
                         ],
                         in:
                         {
@@ -38,16 +61,31 @@ db.document.updateOne(
                             {
                                 branches  : 
                                 [
-                                    // add if does no exist
+                                    // remove item from 'fields' array if it does not exist in initialValue array
+                                    // removal has to be before add, if it as after add then the removal is not executed!!!
+                                    {
+                                        case:
+                                        {
+                                            nor: 
+                                            [
+                                                { $eq : [ "$$this.id", "field3" ] },
+                                                { $eq : [ "$$this.id", "field4" ] },
+                                            ]
+                                        },
+                                        then: "$$value",
+                                    }
+                                    // add item from initialValue if does no exist in 'fields' array
                                     {
                                         case: 
                                         {
+                                            // use $not because $nin is not supported in $switch
                                             $not: 
                                             {
                                                 $in: ["$$this.id", "$$value.id"]    
                                             }
+                                            //$nin: ["$$this.id", "$$value.id"]
                                             
-                                        }
+                                        },
                                         then: { $concatArrays: ["$$value", ["$$this"]] }
                                     },
                                 ],

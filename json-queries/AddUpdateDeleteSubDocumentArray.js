@@ -111,6 +111,56 @@ db.document.updateOne(
     ]
 )
 
+db.document.insert( 
+    { 
+        name: "doc1", 
+        fields: 
+        [
+            {
+                id: "field1",
+                value: "val1"
+            }
+        ]
+        
+    } 
+)
+
+db.document.find( { name: "doc1" } )
+// https://stackoverflow.com/questions/61004259/add-an-element-to-an-array-if-it-exists-dont-add-it-if-it-exists-update-it
+db.document.updateOne(
+    { name: "doc1" },
+    [
+        {
+            $set: 
+            {
+                fields:
+                {
+                    $reduce:
+                    {
+                        input: '$fields',
+                        initialValue  : 
+                        [
+                            {
+                                id: "field2",
+                                value: "val2"
+                            }
+                        ],
+                        in:
+                        {
+                            $cond:
+                            [
+                                { $in: ["$$this.id", "$$value.id"] }, // Check id exists in 'fields' array
+                                "$$value", // If YES, return input
+                                { $concatArrays: ["$$value", ["$$this"]] }, // If YES, do nothing
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    ]
+)
+
 
 // this will add nothing becasue $addToSet compares all object fields and adds only if such object does not exist in the array
 db.document.updateOne(

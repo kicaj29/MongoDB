@@ -142,7 +142,7 @@ db.document.updateOne(
                         [
                             {
                                 id: "field2",
-                                value: "val2"
+                                value: "val3"
                             }
                         ],
                         in:
@@ -150,7 +150,7 @@ db.document.updateOne(
                             $cond:
                             [
                                 { $in: ["$$this.id", "$$value.id"] }, // Check id exists in 'fields' array
-                                "$$value", // If YES, return input
+                                ["$$this"], // If YES, return input
                                 { $concatArrays: ["$$value", ["$$this"]] }, // If YES, do nothing
                             ]
                         }

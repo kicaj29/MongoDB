@@ -29,6 +29,56 @@ db.document.updateOne(
                         [
                             {
                                 id: "field2",
+                                value: "val4"
+                            }                            
+                        ],
+                        in:
+                        {
+                            $switch :
+                            {
+                                branches  : 
+                                [
+                                    // add if does no exist
+                                    {
+                                        case: 
+                                        {
+                                            $not: 
+                                            {
+                                                $in: ["$$this.id", "$$value.id"]    
+                                            }
+                                            
+                                        }
+                                        then: { $concatArrays: ["$$value", ["$$this"]] }
+                                    },
+                                ],
+                                // by default do nothting with the current element
+                                default : ["$$this"],
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+)
+
+
+
+db.document.updateOne(
+    { name: "doc1" },
+    [
+        {
+            $set: 
+            {
+                fields:
+                {
+                    $reduce:
+                    {
+                        input: '$fields',
+                        initialValue  :
+                        [
+                            {
+                                id: "field2",
                                 value: "val3"
                             }                            
                         ],

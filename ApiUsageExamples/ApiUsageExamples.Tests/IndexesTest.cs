@@ -58,7 +58,7 @@ namespace ApiUsageExamples.Tests
             // 1D.  Try to create another index
             CreateIndexModel<Person> indexModel1D = new(indexDefinition, new CreateIndexOptions() { Unique = false, Name = nameof(Person.LastName) });
             exception = Assert.ThrowsAsync<MongoCommandException>(async () => await collection.Indexes.CreateOneAsync(indexModel1D));
-            Assert.That("IndexOptionsConflict", Is.EqualTo(exception.CodeName));
+            Assert.That(exception.CodeName, Is.EqualTo("IndexKeySpecsConflict"));
             Debug.WriteLine(exception.Message); // Command createIndexes failed: Index with name: LastName already exists with different options.
 
             // 1E.  Try to unhide
@@ -69,7 +69,7 @@ namespace ApiUsageExamples.Tests
             // 1F.  Try to hide index
             CreateIndexModel<Person> indexModel1F = new(indexDefinition, new CreateIndexOptions() { Unique = true, Sparse = true, Name = nameof(Person.LastName) });
             exception = Assert.ThrowsAsync<MongoCommandException>(async () => await collection.Indexes.CreateOneAsync(indexModel1F));
-            Assert.That("IndexOptionsConflict", Is.EqualTo(exception.CodeName));
+            Assert.That(exception.CodeName, Is.EqualTo("IndexKeySpecsConflict"));
             Debug.WriteLine(exception.Message); // Command createIndexes failed: Index with name: LastName already exists with different options.
 
 
@@ -90,7 +90,9 @@ namespace ApiUsageExamples.Tests
             Assert.DoesNotThrowAsync(async () => await collectionCusomters.Indexes.CreateOneAsync(indexModelCustomer));
 
 
-
+            // Clean up
+            await DB.DropCollectionAsync("Persons");
+            await DB.DropCollectionAsync("Customers");
 
         }
 
@@ -141,6 +143,9 @@ namespace ApiUsageExamples.Tests
             int uniqueOptionIndex = indicies[1].Names.ToList().IndexOf("unique");
             var uniqueOptionValue = indicies[1].Values.ToList()[uniqueOptionIndex].AsBoolean;
             Assert.IsTrue(uniqueOptionValue);
+
+            // Clean up
+            await DB.DropCollectionAsync("Persons");
         }
 
         [Test]
@@ -163,6 +168,9 @@ namespace ApiUsageExamples.Tests
             p.LastName = "placek";
             // By default mongo indexes are case sensitive
             Assert.DoesNotThrowAsync(async() => await collection.InsertOneAsync(p));
+
+            // Clean up
+            await DB.DropCollectionAsync("Persons");
         }
 
         [Test]
@@ -184,6 +192,9 @@ namespace ApiUsageExamples.Tests
             // This index is case insensitive so it will not allow insert "placek".
             MongoWriteException writeException = Assert.ThrowsAsync<MongoWriteException>(async () => await collection.InsertOneAsync(p));
             Assert.That(writeException.WriteError.Category, Is.EqualTo(ServerErrorCategory.DuplicateKey));
+
+            // Clean up
+            await DB.DropCollectionAsync("Persons");
         }
     }
 }

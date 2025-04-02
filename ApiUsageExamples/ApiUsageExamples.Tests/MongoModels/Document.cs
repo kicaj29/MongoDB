@@ -13,6 +13,7 @@ namespace ApiUsageExamples.Tests.MongoModels
         [BsonRepresentation(BsonType.ObjectId)]
         public string ID { get; set; }
 
+        public string Status { get; set; } = string.Empty;
         public ActionStatus[] Actions { get; set; } = default!;
     }
 }

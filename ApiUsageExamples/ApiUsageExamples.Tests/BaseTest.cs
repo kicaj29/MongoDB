@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using System.Diagnostics;
 
 namespace ApiUsageExamples.Tests
@@ -10,10 +11,21 @@ namespace ApiUsageExamples.Tests
 
         public MongoClientSettings MongoClientSettings { get; set; }
 
+        private TextWriter _originalConsoleOut;
+        private TextWriter _originalConsoleError;
+
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
+            // Redirect console output to NUnit's test output
+            _originalConsoleOut = Console.Out;
+            _originalConsoleError = Console.Error;
+            Console.SetOut(new NUnitTextWriter(_originalConsoleOut));
+            Console.SetError(new NUnitTextWriter(_originalConsoleError));
+
             Trace.Listeners.Add(new ConsoleTraceListener());
+
+
 
             var connString = TestContext.Parameters.Get("mongoConnectionString");
             var dbName = TestContext.Parameters.Get("databaseName");
@@ -51,6 +63,10 @@ namespace ApiUsageExamples.Tests
         public void EndTest()
         {
             Trace.Flush();
+
+            // Restore original console output
+            Console.SetOut(_originalConsoleOut);
+            Console.SetError(_originalConsoleError);
         }
 
         [SetUp]

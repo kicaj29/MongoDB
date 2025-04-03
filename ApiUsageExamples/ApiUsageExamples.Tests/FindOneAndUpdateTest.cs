@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -179,6 +180,9 @@ namespace ApiUsageExamples.Tests
             FilterDefinition<Batch> filter = Builders<Batch>.Filter.Eq(p => p.ID, batch.ID);
             UpdateDefinition<Batch> update = Builders<Batch>.Update.Set(b => b.LastReadAt, DateTime.UtcNow);
             ProjectionDefinition<Batch, List<string>> projection = Builders<Batch>.Projection.Expression(b => b.Documents.Select(d => d.Status).Distinct().ToList());
+
+
+
             List<string> statuses = await collection.FindOneAndUpdateAsync(filter, update,
                 new FindOneAndUpdateOptions<Batch, List<string>>()
                 {

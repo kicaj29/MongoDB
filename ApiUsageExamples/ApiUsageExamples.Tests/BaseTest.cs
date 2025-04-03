@@ -41,6 +41,8 @@ namespace ApiUsageExamples.Tests
                 b.AddConsole();
             });
 
+            // Note: to see logs from mongo driver in Visual Studio open view Output -> Tests
+            // I was not able to redirect the logs to NUnit's test output in Test Explorer
             MongoClientSettings.LoggingSettings = new MongoDB.Driver.Core.Configuration.LoggingSettings(loggerFactory);
 
             // http://mongodb.github.io/mongo-csharp-driver/2.8/apidocs/html/N_MongoDB_Driver_Core_Events.htm

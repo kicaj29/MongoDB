@@ -14,5 +14,7 @@ namespace ApiUsageExamples.Tests.MongoModels
         public string ID { get; set; }
 
         public Document[] Documents { get; set; } = default!;
+
+        public DateTime LastReadAt { get; set; }
     }
 }

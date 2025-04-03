@@ -62,23 +62,43 @@ namespace ApiUsageExamples.Tests.Aggregations
             await collection.InsertOneAsync(batch2);
 
             // Act
+            PipelineStageDefinition<Batch, Batch> stageUpdateLastReadAt = new BsonDocumentPipelineStageDefinition<Batch, Batch>(
+                 new BsonDocument("$addFields", new BsonDocument("LastReadAt", DateTime.UtcNow)));
+
             GroupWithStatuses result = await collection.Aggregate()
                 .Match(b => b.ID == batch.ID)
+                //.AppendStage(stageUpdateLastReadAt) - AppendStage updates mongo document which exist in the pipeline but not in db
                 .Unwind(b => b.Documents)
                 .Group(new BsonDocument
                 {
-                        { "_id", BsonNull.Value },
-                        { "Statuses", new BsonDocument("$addToSet", "$Documents.Status") }
+                            { "_id", BsonNull.Value },
+                            { "Statuses", new BsonDocument("$addToSet", "$Documents.Status") }
                 })
                 .As<GroupWithStatuses>()
                 .FirstOrDefaultAsync();
 
+            // Merge operator can update collection but it must be the last stage in the pipeline so then we cannot read any data
+            /*await collection.Aggregate()
+                .Match(b => b.ID == batch.ID)
+                //.AppendStage(stageUpdateLastReadAt) - AppendStage updates mongo document which exist in the pipeline but not in db
+                .Unwind(b => b.Documents)
+                .Group(new BsonDocument
+                {
+                                        { "_id", BsonNull.Value },
+                                        { "Statuses", new BsonDocument("$addToSet", "$Documents.Status") }
+                })
+                .As<GroupWithStatuses>()
+                .MergeAsync(
+                    collection,
+                    new MergeStageOptions<Batch>());*/
+
             // Assert
             Assert.IsNotNull(result);
             Assert.That(result.Statuses.Count, Is.EqualTo(3));
-            Assert.That(result.Statuses[0], Is.EqualTo("Succeeded"));
-            Assert.That(result.Statuses[1], Is.EqualTo("Processing"));
-            Assert.That(result.Statuses[2], Is.EqualTo("Failed"));
+            // Order can be random
+            Assert.That(result.Statuses.Contains("Succeeded"), Is.True);
+            Assert.That(result.Statuses.Contains("Processing"), Is.True);
+            Assert.That(result.Statuses.Contains("Failed"), Is.True);
 
         }
     }

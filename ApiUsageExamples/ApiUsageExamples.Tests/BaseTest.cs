@@ -24,8 +24,9 @@ namespace ApiUsageExamples.Tests
 
             var loggerFactory = LoggerFactory.Create(b =>
             {
-                b.SetMinimumLevel(LogLevel.Debug);
+                b.SetMinimumLevel(LogLevel.Trace);
                 b.AddSimpleConsole();
+                b.AddSystemdConsole();
             });
 
             MongoClientSettings.LoggingSettings = new MongoDB.Driver.Core.Configuration.LoggingSettings(loggerFactory);

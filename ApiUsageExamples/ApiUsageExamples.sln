@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiUsageExamples.Tests", "A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiUsageExamples.Performance", "ApiUsageExamples.Performance\ApiUsageExamples.Performance.csproj", "{A4852361-1F9F-4EF3-8C23-F46E408B57BB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiUsageExamples.ConsoleProject", "ApiUsageExamples.ConsoleProject\ApiUsageExamples.ConsoleProject.csproj", "{9EDADE2F-9C7B-46BC-9FFC-19F6064D6AF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{A4852361-1F9F-4EF3-8C23-F46E408B57BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4852361-1F9F-4EF3-8C23-F46E408B57BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4852361-1F9F-4EF3-8C23-F46E408B57BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EDADE2F-9C7B-46BC-9FFC-19F6064D6AF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EDADE2F-9C7B-46BC-9FFC-19F6064D6AF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EDADE2F-9C7B-46BC-9FFC-19F6064D6AF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EDADE2F-9C7B-46BC-9FFC-19F6064D6AF3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

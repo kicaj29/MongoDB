@@ -77,6 +77,20 @@ namespace ApiUsageExamples.Tests.Aggregations
                 .As<GroupWithStatuses>()
                 .FirstOrDefaultAsync();
 
+            // but the sam can be done also without aggregation
+            List<string> statuses = await collection
+                .Find(b => b.ID == batch.ID)
+                .Limit(1)
+                .Project(b => b.Documents.Select(d => d.Status).Distinct().ToList())
+                .FirstOrDefaultAsync();
+
+            Assert.That(statuses.Count, Is.EqualTo(3));
+            // Order can be random
+            Assert.That(statuses.Contains("Succeeded"), Is.True);
+            Assert.That(statuses.Contains("Processing"), Is.True);
+            Assert.That(statuses.Contains("Failed"), Is.True);
+
+
             // Merge operator can update collection but it must be the last stage in the pipeline so then we cannot read any data
             /*await collection.Aggregate()
                 .Match(b => b.ID == batch.ID)

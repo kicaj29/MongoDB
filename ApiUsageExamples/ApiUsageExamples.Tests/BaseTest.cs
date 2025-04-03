@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using System.Diagnostics;
 
 namespace ApiUsageExamples.Tests
@@ -27,6 +26,7 @@ namespace ApiUsageExamples.Tests
                 b.SetMinimumLevel(LogLevel.Trace);
                 b.AddSimpleConsole();
                 b.AddSystemdConsole();
+                b.AddConsole();
             });
 
             MongoClientSettings.LoggingSettings = new MongoDB.Driver.Core.Configuration.LoggingSettings(loggerFactory);
@@ -38,6 +38,7 @@ namespace ApiUsageExamples.Tests
                 {
                     Console.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
                 });
+
             };
 
             // MongoClient must be created after subscribing to the events

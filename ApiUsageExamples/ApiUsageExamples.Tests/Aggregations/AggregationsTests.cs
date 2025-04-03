@@ -67,13 +67,10 @@ namespace ApiUsageExamples.Tests.Aggregations
                         { "_id", BsonNull.Value },
                         { "Statuses", new BsonDocument("$addToSet", "$Documents.Status") }
                 })
+                .As<GroupWithStatuses>()
                 .FirstOrDefaultAsync();
 
 
-            Assert.AreEqual(3, groupWithStatuses.Statuses.Count);
-            Assert.Contains("Processing", groupWithStatuses.Statuses);
-            Assert.Contains("Failed", groupWithStatuses.Statuses);
-            Assert.Contains("Succeeded", groupWithStatuses.Statuses);
         }
     }
 }

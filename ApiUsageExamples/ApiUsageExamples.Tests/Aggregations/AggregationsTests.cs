@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace ApiUsageExamples.Tests.Aggregations
 {
+    /// <summary>
+    /// https://www.mongodb.com/developer/languages/csharp/handling-complex-aggregations-csharp/
+    /// </summary>
     internal class AggregationsTests : BaseTest
     {
         [Test]
@@ -59,7 +62,7 @@ namespace ApiUsageExamples.Tests.Aggregations
             await collection.InsertOneAsync(batch2);
 
             // Act
-            var result = await collection.Aggregate()
+            GroupWithStatuses result = await collection.Aggregate()
                 .Match(b => b.ID == batch.ID)
                 .Unwind(b => b.Documents)
                 .Group(new BsonDocument
@@ -70,6 +73,12 @@ namespace ApiUsageExamples.Tests.Aggregations
                 .As<GroupWithStatuses>()
                 .FirstOrDefaultAsync();
 
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.That(result.Statuses.Count, Is.EqualTo(3));
+            Assert.That(result.Statuses[0], Is.EqualTo("Succeeded"));
+            Assert.That(result.Statuses[1], Is.EqualTo("Processing"));
+            Assert.That(result.Statuses[2], Is.EqualTo("Failed"));
 
         }
     }

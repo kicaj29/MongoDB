@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using System.Diagnostics;
 
 namespace ApiUsageExamples.Tests
@@ -20,12 +22,20 @@ namespace ApiUsageExamples.Tests
             var mongoConnectionUrl = new MongoUrl(connString);
             MongoClientSettings = MongoClientSettings.FromUrl(mongoConnectionUrl);
 
+            var loggerFactory = LoggerFactory.Create(b =>
+            {
+                b.SetMinimumLevel(LogLevel.Debug);
+                b.AddSimpleConsole();
+            });
+
+            MongoClientSettings.LoggingSettings = new MongoDB.Driver.Core.Configuration.LoggingSettings(loggerFactory);
+
             // http://mongodb.github.io/mongo-csharp-driver/2.8/apidocs/html/N_MongoDB_Driver_Core_Events.htm
             MongoClientSettings.ClusterConfigurator = cb =>
             {
                 cb.Subscribe<CommandStartedEvent>(e =>
                 {
-                    // Console.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
+                    Console.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
                 });
             };
 

@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using ApiUsageExamples.Tests.Projections;
+using MongoDB.Driver;
 
 namespace ApiUsageExamples.Tests
 {
@@ -13,6 +14,7 @@ namespace ApiUsageExamples.Tests
             var collection = DB.GetCollection<Batch>("Batches");
             Batch batch = new Batch();
             batch.ID = ObjectId.GenerateNewId().ToString();
+            batch.LastReadAt = DateTime.UtcNow;
             batch.Documents = new Document[]
             {
                 new Document { ID = ObjectId.GenerateNewId().ToString(), Status = "Processing" },
@@ -37,6 +39,25 @@ namespace ApiUsageExamples.Tests
 
             // Assert
             Assert.That(docsCount, Is.EqualTo(4));
+
+
+
+            ProjectionDefinition<Batch, BatchProjectionDocsCount> projectionByClass = Builders<Batch>.Projection.Expression(b => new BatchProjectionDocsCount
+            {
+                DocsCount = b.Documents.Count(),
+                LastReadAt = b.LastReadAt
+            });
+            BatchProjectionDocsCount batchProjection = await collection.Find(filter).Project(projectionByClass).FirstOrDefaultAsync();
+
+            // <7>MongoDB.Command[0] 1 3 localhost 27017 213 8 3 Command started find ApiUsageExamples { "find" : "Batches", "filter" : { "_id" : { "$oid" : "689c47e2580d78db517714c4" } }, "projection" : { "DocsCount" : { "$size" : "$Documents" }, "LastReadAt" : 1, "_id" : 0 }, "limit" : 1, "$db" : "ApiUsageExamples", "lsid" : { "id" : { "$binary" : { "base64" : "T8sZsFVBRaOtYyY2wuS+2A==", "subType" : "04" } } } }
+            // find - { "find" : "Batches", "filter" : { "_id" : { "$oid" : "689c47e2580d78db517714c4" } }, "projection" : { "DocsCount" : { "$size" : "$Documents" }, "LastReadAt" : 1, "_id" : 0 }, "limit" : 1, "$db" : "ApiUsageExamples", "lsid" : { "id" : { "$binary" : { "base64" : "T8sZsFVBRaOtYyY2wuS+2A==", "subType" : "04" } } } }
+            // < 7 > MongoDB.Connection[0] 1 3 localhost 27017 213 Sent
+            // < 7 > MongoDB.Connection[0] 1 3 localhost 27017 213 Receiving
+            // < 7 > MongoDB.Command[0] 1 3 localhost 27017 213 8 3 Command succeeded find ApiUsageExamples 1.3923 { "cursor" : { "firstBatch" : [{ "LastReadAt" : { "$date" : { "$numberLong" : "-62135596800000" } }, "DocsCount" : 4 }], "id" : 0, "ns" : "ApiUsageExamples.Batches" }, "ok" : 1.0 }
+
+            // Assert
+            Assert.That(batchProjection.DocsCount, Is.EqualTo(4));
+            Assert.That(batchProjection.LastReadAt, Is.InRange(DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow));
 
         }
     }

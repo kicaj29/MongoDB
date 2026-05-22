@@ -39,34 +39,14 @@
             // Act
             DocumentWithClassDefinition result = await collection.Aggregate()
                 .Match(b => b.ID == batch.ID)
-                .Unwind(b => b.Documents)
-                .Match(new BsonDocument("Documents.ID", new BsonObjectId(ObjectId.Parse(doc1Id))))
-                .AppendStage(new BsonDocumentPipelineStageDefinition<BsonDocument, DocumentWithClassDefinition>(
-                    new BsonDocument("$project", new BsonDocument
-                    {
-                        { "_id", 0 },
-                        { "DocId", "$Documents.ID" },
-                        { "ClassId", "$Documents.ClassId" },
-                        {
-                            "ClassName", new BsonDocument("$let", new BsonDocument
-                            {
-                                {
-                                    "vars", new BsonDocument("matchedClass", new BsonDocument("$arrayElemAt", new BsonArray
-                                    {
-                                        new BsonDocument("$filter", new BsonDocument
-                                        {
-                                            { "input", "$ClassDefinitions" },
-                                            { "as", "cd" },
-                                            { "cond", new BsonDocument("$eq", new BsonArray { "$$cd.ID", "$Documents.ClassId" }) }
-                                        }),
-                                        0
-                                    }))
-                                },
-                                { "in", "$$matchedClass.Name" }
-                            })
-                        }
-                    })
-                ))
+                .Unwind<Batch, BatchUnwound>(b => b.Documents)
+                .Match(b => b.Documents.ID == doc1Id)
+                .Project(b => new DocumentWithClassDefinition
+                {
+                    DocId = b.Documents.ID,
+                    ClassId = b.Documents.ClassId,
+                    ClassName = b.ClassDefinitions.First(c => c.ID == b.Documents.ClassId).Name
+                })
                 .FirstOrDefaultAsync();
 
             // Assert

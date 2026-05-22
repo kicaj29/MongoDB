@@ -1,4 +1,6 @@
-﻿namespace ApiUsageExamples.Tests.Aggregations
+﻿using ApiUsageExamples.Tests.Projections;
+
+namespace ApiUsageExamples.Tests.Aggregations
 {
     /// <summary>
     /// https://www.mongodb.com/developer/languages/csharp/handling-complex-aggregations-csharp/
@@ -37,6 +39,7 @@
             await collection.InsertOneAsync(batch);
 
             // Act
+            // Projection looks in aggregate are executed on the server side.
             DocumentWithClassDefinition result = await collection.Aggregate()
                 .Match(b => b.ID == batch.ID)
                 .Project(b => new DocumentWithClassDefinition
@@ -48,11 +51,27 @@
                 })
                 .FirstOrDefaultAsync();
 
+            // Projection in find query are also executed on the server side.
+            FilterDefinition<Batch> filter = Builders<Batch>.Filter.Eq(p => p.ID, batch.ID);
+            ProjectionDefinition<Batch, DocumentWithClassDefinition> projectionForSingleDocument = Builders<Batch>.Projection.Expression(b => new DocumentWithClassDefinition
+            {
+                DocId = b.Documents.First(d => d.ID == doc1Id).ID,
+                ClassId = b.Documents.First(d => d.ID == doc1Id).ClassId,
+                ClassName = b.ClassDefinitions.First(c => c.ID == b.Documents.First(d => d.ID == doc1Id).ClassId).Name,
+                ClassDefinition = b.ClassDefinitions.First(c => c.ID == b.Documents.First(d => d.ID == doc1Id).ClassId)
+            });
+            DocumentWithClassDefinition resultWithoutAggregation = await collection.Find(filter).Project(projectionForSingleDocument).FirstOrDefaultAsync();
+
             // Assert
             Assert.IsNotNull(result);
             Assert.That(result.DocId, Is.EqualTo(doc1Id));
             Assert.That(result.ClassId, Is.EqualTo("classId1"));
             Assert.That(result.ClassName, Is.EqualTo("Class1"));
+
+            Assert.IsNotNull(resultWithoutAggregation);
+            Assert.That(resultWithoutAggregation.DocId, Is.EqualTo(doc1Id));
+            Assert.That(resultWithoutAggregation.ClassId, Is.EqualTo("classId1"));
+            Assert.That(resultWithoutAggregation.ClassName, Is.EqualTo("Class1"));
         }
 
         [Test]

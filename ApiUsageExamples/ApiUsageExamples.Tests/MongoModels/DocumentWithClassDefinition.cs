@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,14 +8,11 @@ using System.Threading.Tasks;
 
 namespace ApiUsageExamples.Tests.MongoModels
 {
-    internal class Document
+    internal class DocumentWithClassDefinition
     {
-
         [BsonRepresentation(BsonType.ObjectId)]
-        public string ID { get; set; }
-
-        public string Status { get; set; } = string.Empty;
-        public ActionStatus[] Actions { get; set; } = default!;
+        public string DocId { get; set; } = string.Empty;
         public string ClassId { get; set; } = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
     }
 }

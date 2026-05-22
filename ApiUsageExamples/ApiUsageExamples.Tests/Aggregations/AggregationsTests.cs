@@ -1,17 +1,81 @@
-﻿using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ApiUsageExamples.Tests.Aggregations
+﻿namespace ApiUsageExamples.Tests.Aggregations
 {
     /// <summary>
     /// https://www.mongodb.com/developer/languages/csharp/handling-complex-aggregations-csharp/
     /// </summary>
     internal class AggregationsTests : BaseTest
     {
+        [Test]
+        public async Task SubArrays_Join()
+        {
+            // Arrange
+            var collection = DB.GetCollection<Batch>("Batches");
+            Batch batch = new Batch();
+            batch.ID = ObjectId.GenerateNewId().ToString();
+            batch.ClassDefinitions.Add(new ClassDefinition()
+            {
+                ID = "classId1",
+                Name = "Class1"
+            });
+            batch.ClassDefinitions.Add(new ClassDefinition()
+            {
+                ID = "classId2",
+                Name = "Class2"
+            });
+            var doc1Id = ObjectId.GenerateNewId().ToString();
+            batch.Documents.Add(new Document()
+            {
+                ID = doc1Id,
+                ClassId = "classId1"
+            });
+            var doc2Id = ObjectId.GenerateNewId().ToString();
+            batch.Documents.Add(new Document()
+            {
+                ID = doc2Id,
+                ClassId = "classId2"
+            });
+            await collection.InsertOneAsync(batch);
+
+            // Act
+            DocumentWithClassDefinition result = await collection.Aggregate()
+                .Match(b => b.ID == batch.ID)
+                .Unwind(b => b.Documents)
+                .Match(new BsonDocument("Documents.ID", new BsonObjectId(ObjectId.Parse(doc1Id))))
+                .AppendStage(new BsonDocumentPipelineStageDefinition<BsonDocument, DocumentWithClassDefinition>(
+                    new BsonDocument("$project", new BsonDocument
+                    {
+                        { "_id", 0 },
+                        { "DocId", "$Documents.ID" },
+                        { "ClassId", "$Documents.ClassId" },
+                        {
+                            "ClassName", new BsonDocument("$let", new BsonDocument
+                            {
+                                {
+                                    "vars", new BsonDocument("matchedClass", new BsonDocument("$arrayElemAt", new BsonArray
+                                    {
+                                        new BsonDocument("$filter", new BsonDocument
+                                        {
+                                            { "input", "$ClassDefinitions" },
+                                            { "as", "cd" },
+                                            { "cond", new BsonDocument("$eq", new BsonArray { "$$cd.ID", "$Documents.ClassId" }) }
+                                        }),
+                                        0
+                                    }))
+                                },
+                                { "in", "$$matchedClass.Name" }
+                            })
+                        }
+                    })
+                ))
+                .FirstOrDefaultAsync();
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.That(result.DocId, Is.EqualTo(doc1Id));
+            Assert.That(result.ClassId, Is.EqualTo("classId1"));
+            Assert.That(result.ClassName, Is.EqualTo("Class1"));
+        }
+
         [Test]
         public async Task SingleCollectionWithSubArray_SwitchCase()
         {
@@ -45,7 +109,7 @@ namespace ApiUsageExamples.Tests.Aggregations
                 ID = doc4Id,
                 Status = "Succeeded"
             });
-            batch.Documents = documents.ToArray();
+            batch.Documents = documents.ToList();
             await collection.InsertOneAsync(batch);
 
             Batch batch2 = new Batch();
@@ -58,7 +122,7 @@ namespace ApiUsageExamples.Tests.Aggregations
                 ID = doc5Id,
                 Status = "Processing"
             });
-            batch2.Documents = documents2.ToArray();
+            batch2.Documents = documents2.ToList();
             await collection.InsertOneAsync(batch2);
 
             // Act

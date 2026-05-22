@@ -40,7 +40,7 @@ namespace ApiUsageExamples.Tests
                 ID = doc2Id,
                 Actions = new ActionStatus[] { new ActionStatus() { Status = "Status_0", StatusProgressCounter = 0 } }
             });
-            batch.Documents = documents.ToArray();
+            batch.Documents = documents.ToList();
             await collection.InsertOneAsync(batch);
 
             // Act
@@ -159,7 +159,7 @@ namespace ApiUsageExamples.Tests
                 ID = doc4Id,
                 Status = "Succeeded"
             });
-            batch.Documents = documents.ToArray();
+            batch.Documents = documents.ToList();
             await collection.InsertOneAsync(batch);
 
             Batch batch2 = new Batch();
@@ -172,7 +172,7 @@ namespace ApiUsageExamples.Tests
                 ID = doc5Id,
                 Status = "Processing"
             });
-            batch2.Documents = documents2.ToArray();
+            batch2.Documents = documents2.ToList();
             await collection.InsertOneAsync(batch2);
 
             // Act

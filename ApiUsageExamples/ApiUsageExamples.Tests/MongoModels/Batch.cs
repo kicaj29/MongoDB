@@ -1,9 +1,4 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ApiUsageExamples.Tests.MongoModels
 {
@@ -13,8 +8,10 @@ namespace ApiUsageExamples.Tests.MongoModels
         [BsonRepresentation(BsonType.ObjectId)]
         public string ID { get; set; }
 
-        public Document[] Documents { get; set; } = default!;
+        public List<Document> Documents { get; set; } = new List<Document>();
 
         public DateTime LastReadAt { get; set; }
+
+        public List<ClassDefinition> ClassDefinitions { get; set; } = new List<ClassDefinition>();
     }
 }

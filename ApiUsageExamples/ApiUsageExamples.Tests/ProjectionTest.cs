@@ -15,7 +15,7 @@ namespace ApiUsageExamples.Tests
             Batch batch = new Batch();
             batch.ID = ObjectId.GenerateNewId().ToString();
             batch.LastReadAt = DateTime.UtcNow;
-            batch.Documents = new Document[]
+            batch.Documents = new List<Document>
             {
                 new Document { ID = ObjectId.GenerateNewId().ToString(), Status = "Processing" },
                 new Document { ID = ObjectId.GenerateNewId().ToString(), Status = "Failed" },
@@ -24,7 +24,7 @@ namespace ApiUsageExamples.Tests
             };
 
             await collection.InsertOneAsync(batch);
-            
+
             // Act
             FilterDefinition<Batch> filter = Builders<Batch>.Filter.Eq(p => p.ID, batch.ID);
             ProjectionDefinition<Batch, int> projection = Builders<Batch>.Projection.Expression(b => b.Documents.Count());

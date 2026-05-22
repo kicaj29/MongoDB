@@ -53,6 +53,11 @@ namespace ApiUsageExamples.Tests
                     Console.WriteLine($"{e.CommandName} - {e.Command.ToJson()}");
                 });
 
+                cb.Subscribe<CommandSucceededEvent>(e =>
+                {
+                    Console.WriteLine($"{e.CommandName} - {e.Reply.ToString()}");
+                });
+
             };
 
             // MongoClient must be created after subscribing to the events

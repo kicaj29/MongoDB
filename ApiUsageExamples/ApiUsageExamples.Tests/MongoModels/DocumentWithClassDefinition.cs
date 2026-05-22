@@ -11,5 +11,6 @@ namespace ApiUsageExamples.Tests.MongoModels
         public string DocId { get; set; } = string.Empty;
         public string ClassId { get; set; } = string.Empty;
         public string ClassName { get; set; } = string.Empty;
+        public ClassDefinition ClassDefinition { get; set; } = default!;
     }
 }

@@ -6,7 +6,7 @@
     internal class AggregationsTests : BaseTest
     {
         [Test]
-        public async Task SubArrays_Join()
+        public async Task ProjectionInAggregation()
         {
             // Arrange
             var collection = DB.GetCollection<Batch>("Batches");
@@ -39,13 +39,12 @@
             // Act
             DocumentWithClassDefinition result = await collection.Aggregate()
                 .Match(b => b.ID == batch.ID)
-                .Unwind<Batch, BatchUnwound>(b => b.Documents)
-                .Match(b => b.Documents.ID == doc1Id)
                 .Project(b => new DocumentWithClassDefinition
                 {
-                    DocId = b.Documents.ID,
-                    ClassId = b.Documents.ClassId,
-                    ClassName = b.ClassDefinitions.First(c => c.ID == b.Documents.ClassId).Name
+                    DocId = b.Documents.First(d => d.ID == doc1Id).ID,
+                    ClassId = b.Documents.First(d => d.ID == doc1Id).ClassId,
+                    ClassName = b.ClassDefinitions.First(c => c.ID == b.Documents.First(d => d.ID == doc1Id).ClassId).Name,
+                    ClassDefinition = b.ClassDefinitions.First(c => c.ID == b.Documents.First(d => d.ID == doc1Id).ClassId)
                 })
                 .FirstOrDefaultAsync();
 
